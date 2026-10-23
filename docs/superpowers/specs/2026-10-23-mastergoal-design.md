@@ -53,7 +53,13 @@ Square names (from the user, matching the numbers printed around the board, used
 
 - Across the width (11 squares): **0, 1, 2, 3, 4, (blank), 5, 6, 7, 8, 9**. The centre square of the width has no number.
 - Along the length (13 squares): **6., 5., 4., 3., 2., 1., 0, 1, 2, 3, 4, 5, 6**. The first six carry a trailing dot (one half of the pitch), 0 is the centre line, and the last six have no dot (the other half). Which half is White's is left to the builder.
-- A square is named by its width number and its length number. The notation for a square with a blank width position (the centre file, where the goalkeepers and ball start) is left to the builder.
+- A square is written **(w,l)**: width label first, length label second, e.g. `(3,6.)`. The blank centre file of the width is called **B**, e.g. `(B,5.)`. The dotted half (`.`) is **White's half**; the undotted half is Red's.
+- Internally the engine may use numeric indices; names are for the board edges and the move history.
+
+Confirmed start and special squares (from the user, in the notation above):
+
+- **Yellow-dot squares:** `(0,6) (3,6) (4,6) (B,6) (5,6) (6,6) (9,6)` and the same seven on the dotted end line: `(0,6.) (3,6.) (4,6.) (B,6.) (5,6.) (6,6.) (9,6.)`. That is the two corners plus the five squares of the goal width on each end line.
+- **Start squares (dark green dots):** Red goalkeeper `(B,5)`; Red counters `(3,3) (6,3) (2,1) (7,1)`. White goalkeeper `(B,5.)`; White counters `(2,1.) (7,1.) (3,3.) (6,3.)`. Ball `(B,0)`.
 
 Counters:
 
@@ -117,5 +123,5 @@ Confirmed by the user:
 
 ## Open items needing verification against the photos
 
-- Exact start squares, the goal-keeper start square and arm orientation, and which squares have yellow points: read these from the photos (the pitch, goal and area dimensions are now confirmed by the user).
+- Which corners are prohibited for which team (leaflet Fig. 8) and the goal-keeper's arm orientation: read these from the photos. Pitch, goal and area dimensions, start squares and yellow-dot squares are confirmed by the user.
 - Wording of a few leaflet sentences is a transcription from phone photos and is ambiguous where the figures are small (e.g. the self-pass rule, the Goal-keeper side squares rule).
