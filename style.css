@@ -27,7 +27,7 @@ html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: G
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
 select, button { font: inherit; padding: 8px 12px; border-radius: 6px; border: 1px solid #00000055; min-height: 40px; }
 button { background: var(--red); color: #fff; cursor: pointer; }
-#history { margin: 0; padding-left: 1.6em; max-height: 220px; overflow-y: auto; font-size: .9rem; }
+#history { list-style: none; margin: 0; padding-left: 0; max-height: 220px; overflow-y: auto; font-size: .9rem; }
 
 /* Highlights */
 .target { fill: rgba(242, 200, 50, .85); stroke: #6b5200; stroke-width: 1; pointer-events: none; }
