@@ -35,11 +35,12 @@ test('no occupied squares, no jumping over a counter', () => {
   assert.ok(has(s, 7, 0));
 });
 
-test('no player enters a small area', () => {
+// Leaflet (Ball): the Ball never jumps "over the Players that are in the small area",
+// so Players may enter the small areas (the spec's ban was a mistranscription).
+test('players may enter a small area', () => {
   const s = stateFromAscii(put(emptyRows(), 5, -3, 'W'));
-  assert.ok(!has(s, 5, -5));
-  assert.ok(!has(s, 5, -6));
-  assert.ok(!has(s, 4, -5));
+  assert.ok(has(s, 5, -5));
+  assert.ok(has(s, 3, -5));
   assert.ok(has(s, 5, -4));
 });
 
@@ -61,8 +62,11 @@ test('never off pitch; goal-keeper rules', () => {
   const g = stateFromAscii(put(emptyRows(), 5, -5, 'G'));
   const gm = legalCounterMoves(g);
   assert.ok(gm.length > 0 && gm.every((m) => m.piece.kind === 'G'));
-  assert.ok(gm.every((m) => m.to.y <= -3 && m.to.x >= 1 && m.to.x <= 9));
   assert.ok(has(g, 5, -6));
+  // Leaflet: he has a field Player's characteristics "when he is out of his area",
+  // so he may leave it.
+  const e = stateFromAscii(put(emptyRows(), 5, -3, 'G'));
+  assert.ok(has(e, 5, -1));
   const o = stateFromAscii(put(emptyRows(), 5, -1, 'G'));
   assert.equal(legalCounterMoves(o).length, 16);
 });

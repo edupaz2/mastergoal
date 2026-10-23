@@ -22,7 +22,8 @@ function counterAt(s, sq) {
 
 function destinations(s, from, team, isGk) {
   const out = [];
-  const gkInside = isGk && inLargeArea(from, team);
+  // GK text: "No Player can go onto the Goal-keeper's side squares" (a GK may step onto his own).
+  const arms = isGk ? armSquares(s, otherTeam(team)) : [...armSquares(s, 'W'), ...armSquares(s, 'R')];
   for (const [dx, dy] of DIRS) {
     for (let d = 1; d <= 2; d++) {
       const to = { x: from.x + dx * d, y: from.y + dy * d };
@@ -30,11 +31,11 @@ function destinations(s, from, team, isGk) {
       if (d === 2 && counterAt(s, { x: from.x + dx, y: from.y + dy })) break;
       if (counterAt(s, to) || sqEq(to, s.ball)) continue;
       if (isOwnCorner(to, team)) continue;
-      if (gkInside) {
-        if (!inLargeArea(to, team)) continue;
-      } else if (inSmallArea(to, 'W') || inSmallArea(to, 'R')) {
-        continue;
-      }
+      if (arms.some((a) => sqEq(a, to))) continue;
+      // GK text: "... or vice versa": his arms may not be put onto a counter.
+      if (isGk && armsAt(to, team).some((a) => !sqEq(a, from) && counterAt(s, a))) continue;
+      // Ball text: Players may stand in the small areas, and the GK may leave his area
+      // ("same characteristics as the field Player when he is out of his area").
       out.push(to);
     }
   }
@@ -59,7 +60,10 @@ export function legalCounterMoves(s) {
 // large area, and only the arms that are themselves inside that area (leaflet: "only
 // the one which is in is valid", Fig. 7).
 export function armSquares(s, team) {
-  const gk = s.gk[team];
+  return armsAt(s.gk[team], team);
+}
+
+function armsAt(gk, team) {
   if (!inLargeArea(gk, team)) return [];
   return [{ x: gk.x - 1, y: gk.y }, { x: gk.x + 1, y: gk.y }].filter((sq) => inLargeArea(sq, team));
 }
@@ -105,19 +109,18 @@ export function ownersExclusive(s, at, team) {
 // ---------------------------------------------------------------------------
 // Ball moves, turn flow and match end.
 //
-// Rulings (see the Task 4 report):
-// - "The player who took the ball" = every own counter adjacent to the ball's current
-//   square (plus the Goal-keeper when the ball is on his arm square). A pass is a
-//   self-pass when the destination is owned by a single own counter (ownersExclusive)
-//   and that counter is one of these holders.
-// - A ball on an own Goal-keeper arm square belongs to the Goal-keeper alone,
-//   independent of other adjacent players (spec), so passing there is a self-pass
-//   exactly when the Goal-keeper is holding the ball.
-// - A team's own corner is never a legal ball destination unless its own team owns
-//   that square ("lose this characteristic if they belong to ... any Player").
+// Rulings (Task 4 report, revised by the Task 5 leaflet sweep):
+// - Self-pass (leaflet, literal): passing "from one square that belongs to him
+//   exclusively" to another square belonging to him exclusively. The ball's square must
+//   be exclusive to one own counter (ownersExclusive) and the destination exclusive to
+//   the same counter. A ball on a GK arm square belongs to the GK alone.
+// - A square "belongs to a Player" when it is adjacent to him (Fig. 6 text) or is a GK
+//   arm square. Special squares (yellow points: corners and goal-width end-line squares)
+//   lose their characteristic when they belong to any Player of any team: an own corner
+//   is then a legal ball square, and an end-line yellow square gives no extra turn.
 // - The ball never enters its own team's goal strip.
-// - A bonus turn needs the ball to end the turn (unowned) on an opponent end-line
-//   yellow square; a pass that lands there mid-turn gives nothing.
+// - A bonus turn needs the ball to end the turn on an opponent end-line yellow square;
+//   a pass that lands there mid-turn gives nothing.
 
 const YELLOW_X = [0, 3, 4, 5, 6, 7, 10];
 
@@ -130,14 +133,19 @@ function gkBlocks(s, sq) {
   return false;
 }
 
-const onArm = (s, c) => [...armSquares(s, 'W'), ...armSquares(s, 'R')].some((a) => sqEq(a, c));
-
-// Own counters holding the ball at `at` (counters on arm squares do not count).
-function holders(s, at, team) {
-  const out = [...s.players[team], s.gk[team]].filter((c) => adjacent(c, at) && !onArm(s, c));
-  if (armOwner(s, at) === team) out.push(s.gk[team]);
-  return out;
+// Ball text: the ball never jumps "over the Players that are in the small area".
+function smallAreaBlocks(s, sq) {
+  return counterAt(s, sq) && (inSmallArea(sq, 'W') || inSmallArea(sq, 'R'));
 }
+
+// Fig. 8 text: true when `at` belongs to the Goal-keeper or to any Player of any team.
+function belongsToAnyone(s, at) {
+  if (armOwner(s, at)) return true;
+  const { W, R } = adjacentCounts(s, at);
+  return W + R > 0;
+}
+
+const onArm = (s, c) => [...armSquares(s, 'W'), ...armSquares(s, 'R')].some((a) => sqEq(a, c));
 
 // The single own counter owning `at`; call only when ownersExclusive is true.
 function soleOwner(s, at, team) {
@@ -151,12 +159,14 @@ export function legalBallMoves(s) {
   const opp = otherTeam(team);
   const forward = team === 'W' ? 1 : -1;
   const lastMove = s.ballMovesUsed >= 3;
-  const held = holders(s, s.ball, team);
+  // Self-pass text: only a ball on a square exclusive to one counter can be self-passed.
+  const sole = ownersExclusive(s, s.ball, team) ? soleOwner(s, s.ball, team) : null;
   const out = [];
   for (const [dx, dy] of DIRS) {
     for (let d = 1; d <= 4; d++) {
       const to = { x: s.ball.x + dx * d, y: s.ball.y + dy * d };
-      if (d > 1 && gkBlocks(s, { x: s.ball.x + dx * (d - 1), y: s.ball.y + dy * (d - 1) })) break;
+      const prev = { x: s.ball.x + dx * (d - 1), y: s.ball.y + dy * (d - 1) };
+      if (d > 1 && (gkBlocks(s, prev) || smallAreaBlocks(s, prev))) break;
       if (!inPitch(to)) {
         // Only the opponent's goal, entered diagonally or straight forward.
         if (goalDefender(to) === opp && (dx !== 0 || dy === forward)) out.push({ kind: 'ball', to });
@@ -165,10 +175,11 @@ export function legalBallMoves(s) {
       if (counterAt(s, to)) continue;
       const owner = ownerOfBall(s, to);
       if (owner === opp) continue;
-      if (isOwnCorner(to, team) && owner !== team) continue;
+      // Fig. 8: own corner prohibited unless it belongs to some Player (own or neutral).
+      if (isOwnCorner(to, team) && !belongsToAnyone(s, to)) continue;
       if (owner === team) {
         if (lastMove) continue;
-        if (ownersExclusive(s, to, team) && held.some((h) => sqEq(h, soleOwner(s, to, team)))) continue;
+        if (sole && ownersExclusive(s, to, team) && sqEq(sole, soleOwner(s, to, team))) continue;
       } else if (inLargeArea(to, team)) {
         continue;
       }
@@ -239,6 +250,7 @@ export function applyAction(s, a) {
     return n;
   }
   const endLine = team === 'W' ? 6 : -6;
-  endTurn(n, n.ball.y === endLine && YELLOW_X.includes(n.ball.x));
+  // Fig. 8 text: a yellow square belonging to any Player loses its extra turn.
+  endTurn(n, n.ball.y === endLine && YELLOW_X.includes(n.ball.x) && !belongsToAnyone(n, n.ball));
   return n;
 }
