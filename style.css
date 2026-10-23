@@ -6,7 +6,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: Georgia, 'Times New Roman', serif; overflow-x: hidden; }
 .game { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); padding: var(--gap); max-width: 1280px; margin: 0 auto; }
-.board-wrap { min-width: 0; display: flex; justify-content: center; }
+.board-wrap { min-width: 0; display: flex; justify-content: center; position: relative; }
 #board {
   width: min(100%, calc((100vh - 32px) * 0.74));
   touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;
@@ -27,6 +27,17 @@ html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: G
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
 select, button { font: inherit; padding: 8px 12px; border-radius: 6px; border: 1px solid #00000055; min-height: 40px; }
 button { background: var(--red); color: #fff; cursor: pointer; }
+.toss, .level-note { margin: 6px 0 0; font-size: .9rem; opacity: .85; }
+.level-note:empty { display: none; }
+.message { margin: 2px 0; min-height: 1.3em; font-size: .95rem; }
+.banner {
+  position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 2;
+  width: min(86%, 320px); padding: 16px 18px; text-align: center;
+  background: rgba(43, 33, 24, .95); border: 3px solid var(--accent); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.6);
+}
+.banner[hidden] { display: none; }
+.banner p { margin: 0 0 10px; }
+.banner-title { font-size: 1.6rem; font-weight: bold; color: var(--accent); }
 #history { list-style: none; margin: 0; padding-left: 0; max-height: 220px; overflow-y: auto; font-size: .9rem; }
 
 /* Highlights */

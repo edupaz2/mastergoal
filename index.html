@@ -4,12 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mastergoal</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main class="game">
   <section class="board-wrap">
     <div id="board" aria-label="Mastergoal board"></div>
+    <div id="banner" class="banner" role="dialog" aria-live="assertive" aria-labelledby="banner-title" hidden>
+      <p id="banner-title" class="banner-title"></p>
+      <p id="banner-reason"></p>
+      <button id="banner-new" type="button">New game</button>
+    </div>
   </section>
   <aside class="panel">
     <h1>Mastergoal</h1>
@@ -17,9 +23,11 @@
       <div class="team"><span class="chip chip-w"></span> White <b id="score-w">0</b></div>
       <div class="team"><span class="chip chip-r"></span> Red <b id="score-r">0</b></div>
     </div>
+    <p id="toss" class="toss"></p>
     <p id="turn" class="turn"></p>
     <p id="moves-left" class="moves-left"></p>
     <p id="status" class="status" role="status" aria-live="polite"></p>
+    <p id="message" class="message"></p>
     <div class="controls">
       <label for="level">Level</label>
       <select id="level">
@@ -29,6 +37,7 @@
       </select>
       <button id="new-game" type="button">New game</button>
     </div>
+    <p id="level-note" class="level-note"></p>
     <h2>Moves</h2>
     <ol id="history"></ol>
   </aside>
