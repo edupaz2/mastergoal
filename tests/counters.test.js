@@ -35,12 +35,11 @@ test('no occupied squares, no jumping over a counter', () => {
   assert.ok(has(s, 7, 0));
 });
 
-// Leaflet (Ball): the Ball never jumps "over the Players that are in the small area",
-// so Players may enter the small areas (the spec's ban was a mistranscription).
-test('players may enter a small area', () => {
+test('no player enters a small area', () => {
   const s = stateFromAscii(put(emptyRows(), 5, -3, 'W'));
-  assert.ok(has(s, 5, -5));
-  assert.ok(has(s, 3, -5));
+  assert.ok(!has(s, 5, -5));
+  assert.ok(!has(s, 5, -6));
+  assert.ok(!has(s, 4, -5));
   assert.ok(has(s, 5, -4));
 });
 

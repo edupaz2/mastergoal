@@ -66,11 +66,13 @@ test('Fig. 2 / Ball text: only the Ball jumps over Players; a Player cannot', ()
   assert.ok(!counterTargets(s, { x: 5, y: 1 }).includes('5,3'));
 });
 
-test('Ball text: Players may stand in a small area (the Ball cannot jump them there)', () => {
-  // Leaflet: the Ball never jumps "over the Players that are in the small area", so
-  // Players can be there. Own and opponent small area.
-  assert.ok(counterTargets(board([[5, -3, 'W']]), { x: 5, y: -3 }).includes('5,-5'));
-  assert.ok(counterTargets(board([[5, 3, 'W']]), { x: 5, y: 3 }).includes('5,5'));
+test('Spec (binding): no Player, nor a GK outside his area, enters either small area', () => {
+  // Spec line 75 (user-confirmed) bans it; the leaflet's Ball text suggests otherwise.
+  assert.ok(!counterTargets(board([[5, -3, 'W']]), { x: 5, y: -3 }).includes('5,-5'));
+  assert.ok(!counterTargets(board([[5, 3, 'W']]), { x: 5, y: 3 }).includes('5,5'));
+  assert.ok(!counterTargets(board([[5, 3, 'G']]), { x: 5, y: 3 }).includes('5,5'));
+  // A GK outside his own area (x 0) cannot step into his own small area either.
+  assert.ok(!counterTargets(board([[0, -5, 'G']]), { x: 0, y: -5 }).includes('2,-5'));
 });
 
 test('Goal-keeper: same characteristics as a field Player out of his area; he may leave it', () => {
@@ -90,10 +92,10 @@ test('Goal-keeper: arms stay parallel to the goal line wherever he moves in his 
 
 test('Goal-keeper: no Player can go onto his side squares, although they can pass them', () => {
   // White GK (5,-4), arms (4,-4) and (6,-4).
-  const s = board([[5, -4, 'G'], [4, -2, 'R'], [3, -4, 'R'], [6, -3, 'R'], [7, -3, 'R']], { turn: 'R' });
+  const s = board([[5, -4, 'G'], [4, -2, 'R'], [3, -4, 'R'], [7, -5, 'R'], [7, -3, 'R']], { turn: 'R' });
   assert.ok(!counterTargets(s, { x: 4, y: -2 }).includes('4,-4'));
   assert.ok(!counterTargets(s, { x: 3, y: -4 }).includes('4,-4'));
-  assert.ok(counterTargets(s, { x: 6, y: -3 }).includes('6,-5'), 'passes over the arm (6,-4)');
+  assert.ok(counterTargets(s, { x: 7, y: -5 }).includes('5,-3'), 'passes over the arm (6,-4)');
   assert.ok(!counterTargets(s, { x: 7, y: -3 }).includes('6,-4'));
   // His own team's Players neither.
   const w = board([[5, -4, 'G'], [4, -2, 'W']]);
@@ -313,10 +315,12 @@ test('Special squares: an unclaimed yellow end-line square gives another turn', 
   assert.equal(s.bonusTurn, true);
 });
 
-test('Special squares: a yellow square belonging to Players (neutral) gives no extra turn', () => {
+test('Spec (binding): a neutral yellow end-line square still gives the extra turn', () => {
+  // Spec line 49: any opponent end-line yellow square gives the bonus; line 92 only
+  // lifts the corner prohibition.
   const s = ball(board([[5, 2, 'o'], [4, 1, 'W'], [4, 6, 'R'], [6, 6, 'W']], { phase: 'ball' }), 5, 6);
-  assert.equal(s.turn, 'R');
-  assert.equal(s.bonusTurn, false);
+  assert.equal(s.turn, 'W');
+  assert.equal(s.bonusTurn, true);
 });
 
 // --- THE GOAL (Figs. 9 and 10) ---

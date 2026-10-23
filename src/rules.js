@@ -34,8 +34,10 @@ function destinations(s, from, team, isGk) {
       if (arms.some((a) => sqEq(a, to))) continue;
       // GK text: "... or vice versa": his arms may not be put onto a counter.
       if (isGk && armsAt(to, team).some((a) => !sqEq(a, from) && counterAt(s, a))) continue;
-      // Ball text: Players may stand in the small areas, and the GK may leave his area
-      // ("same characteristics as the field Player when he is out of his area").
+      // Spec line 75 (binding): no Player, nor a GK outside his area, enters a small area.
+      // The GK may leave his area (leaflet: "same characteristics ... out of his area").
+      const gkInside = isGk && inLargeArea(from, team);
+      if (!gkInside && (inSmallArea(to, 'W') || inSmallArea(to, 'R'))) continue;
       out.push(to);
     }
   }
@@ -115,9 +117,8 @@ export function ownersExclusive(s, at, team) {
 //   be exclusive to one own counter (ownersExclusive) and the destination exclusive to
 //   the same counter. A ball on a GK arm square belongs to the GK alone.
 // - A square "belongs to a Player" when it is adjacent to him (Fig. 6 text) or is a GK
-//   arm square. Special squares (yellow points: corners and goal-width end-line squares)
-//   lose their characteristic when they belong to any Player of any team: an own corner
-//   is then a legal ball square, and an end-line yellow square gives no extra turn.
+//   arm square. An own corner that belongs to any Player of any team (own or neutral)
+//   loses its prohibition (spec line 92). Bonus squares are unaffected (spec line 49).
 // - The ball never enters its own team's goal strip.
 // - A bonus turn needs the ball to end the turn on an opponent end-line yellow square;
 //   a pass that lands there mid-turn gives nothing.
@@ -250,7 +251,7 @@ export function applyAction(s, a) {
     return n;
   }
   const endLine = team === 'W' ? 6 : -6;
-  // Fig. 8 text: a yellow square belonging to any Player loses its extra turn.
-  endTurn(n, n.ball.y === endLine && YELLOW_X.includes(n.ball.x) && !belongsToAnyone(n, n.ball));
+  // Spec line 49 (binding): any opponent end-line yellow square gives another turn.
+  endTurn(n, n.ball.y === endLine && YELLOW_X.includes(n.ball.x));
   return n;
 }
