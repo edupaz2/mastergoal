@@ -36,8 +36,9 @@ function destinations(s, from, team, isGk) {
       if (isGk && armsAt(to, team).some((a) => !sqEq(a, from) && counterAt(s, a))) continue;
       // Spec line 75 (binding): no Player, nor a GK outside his area, enters a small area.
       // The GK may leave his area (leaflet: "same characteristics ... out of his area").
-      const gkInside = isGk && inLargeArea(from, team);
-      if (!gkInside && (inSmallArea(to, 'W') || inSmallArea(to, 'R'))) continue;
+      // Only a GK already inside his own area may enter his OWN small area.
+      const ownSmallOk = isGk && inLargeArea(from, team) && inSmallArea(to, team);
+      if (!ownSmallOk && (inSmallArea(to, 'W') || inSmallArea(to, 'R'))) continue;
       out.push(to);
     }
   }
@@ -112,10 +113,10 @@ export function ownersExclusive(s, at, team) {
 // Ball moves, turn flow and match end.
 //
 // Rulings (Task 4 report, revised by the Task 5 leaflet sweep):
-// - Self-pass (leaflet, literal): passing "from one square that belongs to him
-//   exclusively" to another square belonging to him exclusively. The ball's square must
-//   be exclusive to one own counter (ownersExclusive) and the destination exclusive to
-//   the same counter. A ball on a GK arm square belongs to the GK alone.
+// - Self-pass (spec lines 61/89, binding): every own counter adjacent to the ball's
+//   square (plus the GK when the ball is on his arm square) is a taker. A pass is a
+//   self-pass when the destination is owned by a single own counter (ownersExclusive)
+//   who is a taker. A ball on a GK arm square belongs to the GK alone.
 // - A square "belongs to a Player" when it is adjacent to him (Fig. 6 text) or is a GK
 //   arm square. An own corner that belongs to any Player of any team (own or neutral)
 //   loses its prohibition (spec line 92). Bonus squares are unaffected (spec line 49).
@@ -135,6 +136,8 @@ function gkBlocks(s, sq) {
 }
 
 // Ball text: the ball never jumps "over the Players that are in the small area".
+// Defensive: with the spec's small-area ban only a GK can stand there, and gkBlocks
+// already stops the ball at him; this guards hand-built or future states.
 function smallAreaBlocks(s, sq) {
   return counterAt(s, sq) && (inSmallArea(sq, 'W') || inSmallArea(sq, 'R'));
 }
@@ -148,6 +151,13 @@ function belongsToAnyone(s, at) {
 
 const onArm = (s, c) => [...armSquares(s, 'W'), ...armSquares(s, 'R')].some((a) => sqEq(a, c));
 
+// Own counters holding the ball at `at` (counters on arm squares do not count).
+function holders(s, at, team) {
+  const out = [...s.players[team], s.gk[team]].filter((c) => adjacent(c, at) && !onArm(s, c));
+  if (armOwner(s, at) === team) out.push(s.gk[team]);
+  return out;
+}
+
 // The single own counter owning `at`; call only when ownersExclusive is true.
 function soleOwner(s, at, team) {
   if (armOwner(s, at) === team) return s.gk[team];
@@ -160,8 +170,8 @@ export function legalBallMoves(s) {
   const opp = otherTeam(team);
   const forward = team === 'W' ? 1 : -1;
   const lastMove = s.ballMovesUsed >= 3;
-  // Self-pass text: only a ball on a square exclusive to one counter can be self-passed.
-  const sole = ownersExclusive(s, s.ball, team) ? soleOwner(s, s.ball, team) : null;
+  // Spec lines 61/89: every own counter next to the ball is a taker.
+  const held = holders(s, s.ball, team);
   const out = [];
   for (const [dx, dy] of DIRS) {
     for (let d = 1; d <= 4; d++) {
@@ -180,7 +190,7 @@ export function legalBallMoves(s) {
       if (isOwnCorner(to, team) && !belongsToAnyone(s, to)) continue;
       if (owner === team) {
         if (lastMove) continue;
-        if (sole && ownersExclusive(s, to, team) && sqEq(sole, soleOwner(s, to, team))) continue;
+        if (ownersExclusive(s, to, team) && held.some((h) => sqEq(h, soleOwner(s, to, team)))) continue;
       } else if (inLargeArea(to, team)) {
         continue;
       }

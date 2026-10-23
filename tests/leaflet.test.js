@@ -200,15 +200,15 @@ test('Self-pass: from a square exclusively his to another square only his is ill
   assert.ok(!t.includes('6,-3'));
 });
 
-test('Self-pass: from a square not exclusive to him the pass is legal', () => {
-  // Leaflet: "he cannot pass the Ball from one square that belongs to him exclusively".
-  // The ball (5,0) belongs to A (4,-1) and B (6,-1); (3,0) belongs to A alone.
+test('Self-pass (spec, binding): every own counter next to the ball is a taker', () => {
+  // Spec lines 61/89: no pass to a square owned only by a counter next to the ball.
+  // The ball (5,0) is next to A (4,-1) and B (6,-1); (3,0) belongs to A alone.
   const s = board([[5, 0, 'o'], [4, -1, 'W'], [6, -1, 'W']], { phase: 'ball' });
-  assert.ok(ballTargets(s).includes('3,0'));
-  // Same with the Goal-keeper: ball (4,-4) shared by the GK and (3,-3); the arm
+  assert.ok(!ballTargets(s).includes('3,0'));
+  // Same with the Goal-keeper: ball (4,-4) next to the GK and (3,-3); the arm
   // square (4,-5) belongs to the GK alone.
   const g = board([[4, -4, 'o'], [5, -5, 'G'], [3, -3, 'W']], { phase: 'ball' });
-  assert.ok(ballTargets(g).includes('4,-5'));
+  assert.ok(!ballTargets(g).includes('4,-5'));
 });
 
 test('Passes: a square owned by a majority of own Players is used like a single-owner one', () => {
@@ -296,7 +296,8 @@ test('Fig. 8: a team can neither occupy nor send the ball to its own corners', (
 });
 
 test('Fig. 8: a corner belonging to a Player loses its prohibition (own pass)', () => {
-  const s = board([[2, -4, 'o'], [3, -3, 'W'], [1, -5, 'W']], { phase: 'ball' });
+  // (0,-5) owns the corner and is not next to the ball, so this is a real pass.
+  const s = board([[2, -4, 'o'], [3, -3, 'W'], [0, -5, 'W']], { phase: 'ball' });
   assert.ok(ballTargets(s).includes('0,-6'));
 });
 

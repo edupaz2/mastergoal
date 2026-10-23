@@ -134,14 +134,11 @@ test('a square adjacent to both the taker and another own player is a legal pass
   assert.ok(ballTargets(s).includes('3,0'));
 });
 
-test('a pass into the own GK arm square is a self-pass only when the ball is his alone', () => {
-  // Ball (4,-3) belongs to the White GK (5,-4) alone. The arm square (4,-4) belongs to
-  // the GK alone too (independent of the player at (3,-5)): self-pass.
-  const s = board([[4, -3, 'o'], [5, -4, 'G'], [3, -5, 'W']], { phase: 'ball' });
-  assert.ok(!ballTargets(s).includes('4,-4'));
-  // Ball (4,-4) shared by the GK (5,-5) and (3,-3): not exclusive, so the pass is legal.
-  const sh = board([[4, -4, 'o'], [5, -5, 'G'], [3, -3, 'W'], [3, -5, 'W']], { phase: 'ball' });
-  assert.ok(ballTargets(sh).includes('4,-5'));
+test('a pass into the own GK arm square is a self-pass when the GK holds the ball', () => {
+  // Ball (4,-4) is held by the White GK (5,-5) and player (3,-3). The arm square
+  // (4,-5) belongs to the GK alone (independent of the player at (3,-5)).
+  const s = board([[4, -4, 'o'], [5, -5, 'G'], [3, -3, 'W'], [3, -5, 'W']], { phase: 'ball' });
+  assert.ok(!ballTargets(s).includes('4,-5'));
   // From (2,-3), held by (2,-2), the GK did not take the ball: the pass is legal.
   const s2 = board([[2, -3, 'o'], [2, -2, 'W'], [5, -5, 'G']], { phase: 'ball' });
   assert.ok(ballTargets(s2).includes('4,-5'));
