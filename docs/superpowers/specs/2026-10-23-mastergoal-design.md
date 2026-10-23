@@ -56,6 +56,12 @@ Square names (from the user, matching the numbers printed around the board, used
 - A square is written **(w,l)**: width label first, length label second, e.g. `(3,6.)`. The blank centre file of the width is called **B**, e.g. `(B,5.)`. The dotted half (`.`) is **White's half**; the undotted half is Red's.
 - Internally the engine may use numeric indices; names are for the board edges and the move history.
 
+Confirmed rules clarifications (from the user):
+
+- **Self-pass:** a player cannot pass the ball to himself, i.e. a ball move may not end on a square whose only owner is the player who just took the ball.
+- **Goal-keeper arms:** always horizontal, along the width axis (the squares immediately left and right of him).
+- **Prohibited corners:** a team can neither occupy its own corner squares nor send the ball there. Red: `(0,6)` and `(9,6)`. White: `(0,6.)` and `(9,6.)`.
+
 Confirmed start and special squares (from the user, in the notation above):
 
 - **Yellow-dot squares:** `(0,6) (3,6) (4,6) (B,6) (5,6) (6,6) (9,6)` and the same seven on the dotted end line: `(0,6.) (3,6.) (4,6.) (B,6.) (5,6.) (6,6.) (9,6.)`. That is the two corners plus the five squares of the goal width on each end line.
@@ -123,5 +129,5 @@ Confirmed by the user:
 
 ## Open items needing verification against the photos
 
-- Which corners are prohibited for which team (leaflet Fig. 8) and the goal-keeper's arm orientation: read these from the photos. Pitch, goal and area dimensions, start squares and yellow-dot squares are confirmed by the user.
+- None outstanding on geometry: pitch, goal and area dimensions, start squares, yellow-dot squares, prohibited corners and goal-keeper arm orientation are all confirmed by the user.
 - Wording of a few leaflet sentences is a transcription from phone photos and is ambiguous where the figures are small (e.g. the self-pass rule, the Goal-keeper side squares rule).
