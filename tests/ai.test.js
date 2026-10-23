@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { chooseTurn, evaluate, generateTurns, stateKey } from '../src/ai.js';
 import { applyAction, isOver, legalActions } from '../src/rules.js';
 import { initialState } from '../src/state.js';
+import { handleMessage } from '../src/ai-worker.js';
 import { stateFromAscii, emptyRows, put } from './helpers.js';
 
 function board(placements, opts = {}) {
@@ -132,19 +133,21 @@ test('generateTurns finds a put-out reached by passing into a dead end on the la
   assert.ok(generateTurns(s).some((t) => t.state.result?.reason === 'put-out'));
 });
 
-test('ai-worker: answers {state, level} with {actions}', async () => {
+test('ai-worker: answers {state, level} with {actions}', () => {
   const posted = [];
-  globalThis.self = { postMessage: (m) => posted.push(m) };
-  try {
-    await import('../src/ai-worker.js');
-    const s = initialState('R');
-    // A structured-clone copy, as a real worker receives it.
-    self.onmessage({ data: { state: structuredClone(s), level: 'master', opts: { timeMs: 100 } } });
-    assert.equal(posted.length, 1);
-    playOut(s, posted[0].actions);
-  } finally {
-    delete globalThis.self;
-  }
+  const s = initialState('R');
+  // A structured-clone copy, as a real worker receives it.
+  handleMessage({ state: structuredClone(s), level: 'master', opts: { timeMs: 100 } }, (m) => posted.push(m));
+  assert.equal(posted.length, 1);
+  playOut(s, posted[0].actions);
+});
+
+test('ai-worker: an error (unknown level) still posts a reply {actions: [], error}', () => {
+  const posted = [];
+  handleMessage({ state: initialState('R'), level: 'grandmaster' }, (m) => posted.push(m));
+  assert.equal(posted.length, 1);
+  assert.deepEqual(posted[0].actions, []);
+  assert.match(posted[0].error, /unknown level/);
 });
 
 // --- Self-play harness ---------------------------------------------------------------
