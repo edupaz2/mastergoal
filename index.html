@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mastergoal</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="game">
+  <section class="board-wrap">
+    <div id="board" aria-label="Mastergoal board"></div>
+  </section>
+  <aside class="panel">
+    <h1>Mastergoal</h1>
+    <div class="score" aria-live="polite">
+      <div class="team"><span class="chip chip-w"></span> White <b id="score-w">0</b></div>
+      <div class="team"><span class="chip chip-r"></span> Red <b id="score-r">0</b></div>
+    </div>
+    <p id="turn" class="turn"></p>
+    <p id="moves-left" class="moves-left"></p>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <div class="controls">
+      <label for="level">Level</label>
+      <select id="level">
+        <option value="beginner">Beginner</option>
+        <option value="medium" selected>Medium</option>
+        <option value="master">Master</option>
+      </select>
+      <button id="new-game" type="button">New game</button>
+    </div>
+    <h2>Moves</h2>
+    <ol id="history"></ol>
+  </aside>
+</main>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
