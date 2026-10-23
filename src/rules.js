@@ -53,3 +53,50 @@ export function legalCounterMoves(s) {
   }
   return moves;
 }
+
+// Goal-keeper arm squares: horizontal (x-1, x+1), only while he stands inside his own
+// large area, and only the arms that are themselves inside that area (leaflet: "only
+// the one which is in is valid", Fig. 7).
+export function armSquares(s, team) {
+  const gk = s.gk[team];
+  if (!inLargeArea(gk, team)) return [];
+  return [{ x: gk.x - 1, y: gk.y }, { x: gk.x + 1, y: gk.y }].filter((sq) => inLargeArea(sq, team));
+}
+
+const adjacent = (a, b) => !sqEq(a, b) && Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
+
+function armOwner(s, at) {
+  for (const t of ['W', 'R']) {
+    if (armSquares(s, t).some((sq) => sqEq(sq, at))) return t;
+  }
+  return null;
+}
+
+// Each team's counters adjacent to `at`, skipping counters that stand on arm squares.
+function adjacentCounts(s, at) {
+  const arms = [...armSquares(s, 'W'), ...armSquares(s, 'R')];
+  const counts = { W: 0, R: 0 };
+  for (const t of ['W', 'R']) {
+    for (const c of [...s.players[t], s.gk[t]]) {
+      if (adjacent(c, at) && !arms.some((a) => sqEq(a, c))) counts[t]++;
+    }
+  }
+  return counts;
+}
+
+export function ownerOfBall(s, at = s.ball) {
+  const gkTeam = armOwner(s, at);
+  if (gkTeam) return gkTeam;
+  const { W, R } = adjacentCounts(s, at);
+  if (W > R) return 'W';
+  if (R > W) return 'R';
+  return null;
+}
+
+// True when `team` owns `at` through one single counter (a lone adjacent counter, or
+// the Goal-keeper through his arm square). Used by the self-pass rule.
+export function ownersExclusive(s, at, team) {
+  if (ownerOfBall(s, at) !== team) return false;
+  if (armOwner(s, at) === team) return true;
+  return adjacentCounts(s, at)[team] === 1;
+}
