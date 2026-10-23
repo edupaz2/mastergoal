@@ -4,7 +4,7 @@ import { armSquares } from './rules.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const C = 40;            // cell size in viewBox units
-const M = 16;            // margin for edge labels
+const M = 20;           // margin for edge labels
 const ROWS = 15;         // y = 7 .. -7 (goal strips included)
 const VW = M * 2 + C * WIDTH;
 const VH = M * 2 + C * ROWS;
@@ -69,9 +69,14 @@ function buildStatic(svg, onClick) {
   const dots = el('g', {}, svg);
   for (const y of [-6, 6]) for (const x of YELLOW_X) el('circle', { cx: cx(x), cy: cy(y), r: 5, fill: '#f2c832' }, dots);
   const start = [[5, 0], [2, -1], [8, -1], [3, -3], [7, -3], [5, -5], [2, 1], [8, 1], [3, 3], [7, 3], [5, 5]];
-  for (const [x, y] of start) el('circle', { cx: cx(x), cy: cy(y), r: 5, fill: '#2f9e44' }, dots);
+  for (const [x, y] of start) {
+    // Ring larger than a counter (r=15) so it shows around a marble, plus a centre dot.
+    el('circle', { cx: cx(x), cy: cy(y), r: 18.5, fill: 'none', stroke: '#e9f5d0', 'stroke-width': 4.5 }, dots);
+    el('circle', { cx: cx(x), cy: cy(y), r: 18.5, fill: 'none', stroke: '#0f5a24', 'stroke-width': 2.5 }, dots);
+    el('circle', { cx: cx(x), cy: cy(y), r: 6, fill: '#0f5a24', stroke: '#e9f5d0', 'stroke-width': 1.5 }, dots);
+  }
   // Edge labels (width: 0 1 2 3 4 _ 5 6 7 8 9; length: 6. .. 1. 0 1 .. 6, dotted half = White's).
-  const lab = el('g', { class: 'labels', fill: '#f6e9d0', 'font-size': 13, 'font-family': 'Georgia, serif', 'text-anchor': 'middle' }, svg);
+  const lab = el('g', { class: 'labels', fill: '#f6e9d0', 'font-size': 16, 'font-weight': 'bold', 'font-family': 'Georgia, serif', 'text-anchor': 'middle' }, svg);
   for (let x = 0; x < WIDTH; x++) {
     if (!WIDTH_LABELS[x]) continue;
     el('text', { x: cx(x), y: M / 2 + 4.5 }, lab, WIDTH_LABELS[x]);
