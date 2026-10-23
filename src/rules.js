@@ -1,6 +1,7 @@
 import { inPitch, inSmallArea, inLargeArea, goalDefender, sqEq } from './board.js';
 import { initialState, cloneState } from './state.js';
 
+const TEAMS = ['W', 'R'];
 const DIRS = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
 
 export function otherTeam(t) {
@@ -13,9 +14,11 @@ function isOwnCorner(sq, team) {
 }
 
 function counterAt(s, sq) {
-  for (const t of ['W', 'R']) {
-    if (sqEq(s.gk[t], sq)) return true;
-    if (s.players[t].some((p) => sqEq(p, sq))) return true;
+  const { x, y } = sq;
+  for (const t of TEAMS) {
+    const g = s.gk[t];
+    if (g.x === x && g.y === y) return true;
+    for (const p of s.players[t]) if (p.x === x && p.y === y) return true;
   }
   return false;
 }
@@ -23,7 +26,7 @@ function counterAt(s, sq) {
 function destinations(s, from, team, isGk) {
   const out = [];
   // GK text: "No Player can go onto the Goal-keeper's side squares" (a GK may step onto his own).
-  const arms = isGk ? armSquares(s, otherTeam(team)) : [...armSquares(s, 'W'), ...armSquares(s, 'R')];
+  const opp = otherTeam(team);
   for (const [dx, dy] of DIRS) {
     for (let d = 1; d <= 2; d++) {
       const to = { x: from.x + dx * d, y: from.y + dy * d };
@@ -31,7 +34,7 @@ function destinations(s, from, team, isGk) {
       if (d === 2 && counterAt(s, { x: from.x + dx, y: from.y + dy })) break;
       if (counterAt(s, to) || sqEq(to, s.ball)) continue;
       if (isOwnCorner(to, team)) continue;
-      if (arms.some((a) => sqEq(a, to))) continue;
+      if (isGk ? isArm(s, opp, to) : onArm(s, to)) continue;
       // GK text: "... or vice versa": his arms may not be put onto a counter.
       if (isGk && armsAt(to, team).some((a) => !sqEq(a, from) && counterAt(s, a))) continue;
       // Spec line 75 (binding): no Player, nor a GK outside his area, enters a small area.
@@ -71,23 +74,30 @@ function armsAt(gk, team) {
   return [{ x: gk.x - 1, y: gk.y }, { x: gk.x + 1, y: gk.y }].filter((sq) => inLargeArea(sq, team));
 }
 
+// Allocation-free equivalent of armSquares(s, team).some((a) => sqEq(a, sq)).
+function isArm(s, team, sq) {
+  const gk = s.gk[team];
+  return sq.y === gk.y && Math.abs(sq.x - gk.x) === 1 && inLargeArea(gk, team) && inLargeArea(sq, team);
+}
+
+// True when `sq` is an arm square of either Goal-keeper.
+const onArm = (s, sq) => isArm(s, 'W', sq) || isArm(s, 'R', sq);
+
 const adjacent = (a, b) => !sqEq(a, b) && Math.abs(a.x - b.x) <= 1 && Math.abs(a.y - b.y) <= 1;
 
 function armOwner(s, at) {
-  for (const t of ['W', 'R']) {
-    if (armSquares(s, t).some((sq) => sqEq(sq, at))) return t;
-  }
+  if (isArm(s, 'W', at)) return 'W';
+  if (isArm(s, 'R', at)) return 'R';
   return null;
 }
 
 // Each team's counters adjacent to `at`, skipping counters that stand on arm squares.
 function adjacentCounts(s, at) {
-  const arms = [...armSquares(s, 'W'), ...armSquares(s, 'R')];
   const counts = { W: 0, R: 0 };
-  for (const t of ['W', 'R']) {
-    for (const c of [...s.players[t], s.gk[t]]) {
-      if (adjacent(c, at) && !arms.some((a) => sqEq(a, c))) counts[t]++;
-    }
+  for (const t of TEAMS) {
+    for (const c of s.players[t]) if (adjacent(c, at) && !onArm(s, c)) counts[t]++;
+    const g = s.gk[t];
+    if (adjacent(g, at) && !onArm(s, g)) counts[t]++;
   }
   return counts;
 }
@@ -126,31 +136,6 @@ export function ownersExclusive(s, at, team) {
 
 const YELLOW_X = [0, 3, 4, 5, 6, 7, 10];
 
-// The ball may never cross a Goal-keeper inside his large area or his arm squares.
-function gkBlocks(s, sq) {
-  for (const t of ['W', 'R']) {
-    if (inLargeArea(s.gk[t], t) && sqEq(s.gk[t], sq)) return true;
-    if (armSquares(s, t).some((a) => sqEq(a, sq))) return true;
-  }
-  return false;
-}
-
-// Ball text: the ball never jumps "over the Players that are in the small area".
-// Defensive: with the spec's small-area ban only a GK can stand there, and gkBlocks
-// already stops the ball at him; this guards hand-built or future states.
-function smallAreaBlocks(s, sq) {
-  return counterAt(s, sq) && (inSmallArea(sq, 'W') || inSmallArea(sq, 'R'));
-}
-
-// Fig. 8 text: true when `at` belongs to the Goal-keeper or to any Player of any team.
-function belongsToAnyone(s, at) {
-  if (armOwner(s, at)) return true;
-  const { W, R } = adjacentCounts(s, at);
-  return W + R > 0;
-}
-
-const onArm = (s, c) => [...armSquares(s, 'W'), ...armSquares(s, 'R')].some((a) => sqEq(a, c));
-
 // Own counters holding the ball at `at` (counters on arm squares do not count).
 function holders(s, at, team) {
   const out = [...s.players[team], s.gk[team]].filter((c) => adjacent(c, at) && !onArm(s, c));
@@ -164,33 +149,120 @@ function soleOwner(s, at, team) {
   return [...s.players[team], s.gk[team]].find((c) => adjacent(c, at) && !onArm(s, c));
 }
 
+// Per-call lookup tables for legalBallMoves (counters do not move during it), indexed
+// by pitch square: occupancy (counterAt), each team's adjacent-counter counts with
+// arm-square counters skipped (adjacentCounts), the arm owner (armOwner) and the squares
+// the ball may not cross (a GK inside his large area, his arm squares, and occupied
+// small-area squares). Same values as those helpers, so the destination loop is O(1)
+// per square.
+const sqIndex = (x, y) => (y + 6) * 11 + x;
+const inPitchXY = (x, y) => x >= 0 && x < 11 && y >= -6 && y <= 6;
+
+// Scratch buffers reused by every call (legalBallMoves is synchronous and never
+// re-entered while they are in use). The tables depend only on the counters' squares,
+// so they are rebuilt only when those differ from the previous call's (`sig`); ball
+// moves within one turn keep the counters still.
+const GRID = {
+  occ: new Uint8Array(143),
+  cnt: { W: new Uint8Array(143), R: new Uint8Array(143) },
+  arm: new Uint8Array(143), // 0 none, 1 W, 2 R
+  block: new Uint8Array(143),
+  sig: [],
+};
+
+function counterSig(s) {
+  const sig = [];
+  for (const t of TEAMS) {
+    sig.push(s.players[t].length);
+    for (const q of s.players[t]) sig.push(q.x, q.y);
+    sig.push(s.gk[t].x, s.gk[t].y);
+  }
+  return sig;
+}
+
+function ballGrid(s) {
+  const { occ, cnt, arm, block } = GRID;
+  const sig = counterSig(s);
+  if (sig.length === GRID.sig.length && sig.every((v, i) => v === GRID.sig[i])) return GRID;
+  GRID.sig = sig;
+  occ.fill(0);
+  cnt.W.fill(0);
+  cnt.R.fill(0);
+  arm.fill(0);
+  block.fill(0);
+  TEAMS.forEach((t, ti) => {
+    const gk = s.gk[t];
+    if (inLargeArea(gk, t)) {
+      block[sqIndex(gk.x, gk.y)] = 1;
+      for (const x of [gk.x - 1, gk.x + 1]) {
+        if (inLargeArea({ x, y: gk.y }, t)) {
+          const i = sqIndex(x, gk.y);
+          if (!arm[i]) arm[i] = ti + 1; // armOwner checks W first
+          block[i] = 1;
+        }
+      }
+    }
+  });
+  for (const t of TEAMS) {
+    const c = cnt[t];
+    for (const q of s.players[t].concat([s.gk[t]])) {
+      if (!inPitchXY(q.x, q.y)) continue; // parked off-pitch: no pitch neighbours either
+      const i = sqIndex(q.x, q.y);
+      occ[i] = 1;
+      if (inSmallArea(q, 'W') || inSmallArea(q, 'R')) block[i] = 1;
+      if (arm[i]) continue;
+      for (const [dx, dy] of DIRS) {
+        const x = q.x + dx;
+        const y = q.y + dy;
+        if (inPitchXY(x, y)) c[sqIndex(x, y)]++;
+      }
+    }
+  }
+  return GRID;
+}
+
 export function legalBallMoves(s) {
   if (s.result || s.phase !== 'ball') return [];
+  const { occ, cnt, arm, block } = ballGrid(s);
   const team = s.turn;
   const opp = otherTeam(team);
+  const armMine = team === 'W' ? 1 : 2;
   const forward = team === 'W' ? 1 : -1;
   const lastMove = s.ballMovesUsed >= 3;
+  const own = cnt[team];
+  const other = cnt[opp];
   // Spec lines 61/89: every own counter next to the ball is a taker.
   const held = holders(s, s.ball, team);
+  const bx = s.ball.x;
+  const by = s.ball.y;
   const out = [];
   for (const [dx, dy] of DIRS) {
     for (let d = 1; d <= 4; d++) {
-      const to = { x: s.ball.x + dx * d, y: s.ball.y + dy * d };
-      const prev = { x: s.ball.x + dx * (d - 1), y: s.ball.y + dy * (d - 1) };
-      if (d > 1 && (gkBlocks(s, prev) || smallAreaBlocks(s, prev))) break;
-      if (!inPitch(to)) {
+      const x = bx + dx * d;
+      const y = by + dy * d;
+      // The ball never crosses a GK inside his large area or his arm squares (gkBlocks).
+      // Ball text: it never jumps "over the Players that are in the small area";
+      // defensive: with the small-area ban only a GK can stand there.
+      if (d > 1 && block[sqIndex(x - dx, y - dy)]) break;
+      if (!inPitchXY(x, y)) {
         // Only the opponent's goal, entered diagonally or straight forward.
-        if (goalDefender(to) === opp && (dx !== 0 || dy === forward)) out.push({ kind: 'ball', to });
+        if (goalDefender({ x, y }) === opp && (dx !== 0 || dy === forward)) out.push({ kind: 'ball', to: { x, y } });
         break;
       }
-      if (counterAt(s, to)) continue;
-      const owner = ownerOfBall(s, to);
+      const i = sqIndex(x, y);
+      if (occ[i]) continue;
+      // ownerOfBall: the arm owner first, else the strict majority.
+      const owner = arm[i] ? (arm[i] === armMine ? team : opp) : own[i] > other[i] ? team : other[i] > own[i] ? opp : null;
       if (owner === opp) continue;
-      // Fig. 8: own corner prohibited unless it belongs to some Player (own or neutral).
-      if (isOwnCorner(to, team) && !belongsToAnyone(s, to)) continue;
+      const to = { x, y };
+      // Fig. 8: own corner prohibited unless it belongs to the Goal-keeper or to any
+      // Player of any team (own or neutral).
+      if (isOwnCorner(to, team) && !arm[i] && own[i] + other[i] === 0) continue;
       if (owner === team) {
         if (lastMove) continue;
-        if (ownersExclusive(s, to, team) && held.some((h) => sqEq(h, soleOwner(s, to, team)))) continue;
+        // ownersExclusive(s, to, team): through the arm, or a single adjacent counter.
+        const exclusive = arm[i] === armMine || own[i] === 1;
+        if (exclusive && held.some((h) => sqEq(h, soleOwner(s, to, team)))) continue;
       } else if (inLargeArea(to, team)) {
         continue;
       }
@@ -223,15 +295,30 @@ function endTurn(n, bonus) {
   if (!bonus) n.turn = otherTeam(n.turn);
 }
 
-// Put out: an obliged ball phase with no legal destination ends the game.
+// Put out: an obliged ball phase with no legal destination ends the game. Returns the
+// legal ball moves of `n` (empty when it is not in an open ball phase).
 function checkPutOut(n) {
-  if (n.phase === 'ball' && legalBallMoves(n).length === 0) {
-    n.result = { winner: leader(n.score), reason: 'put-out' };
-  }
+  if (n.phase !== 'ball') return [];
+  const moves = legalBallMoves(n);
+  if (moves.length === 0) n.result = { winner: leader(n.score), reason: 'put-out' };
+  return moves;
 }
 
 export function applyAction(s, a) {
   if (!legalActions(s).some((m) => sameAction(m, a))) throw new Error('illegal action');
+  return stepAction(s, a).state;
+}
+
+// applyAction without the legality check, for callers (the AI search) that only apply
+// actions they just took from legalActions(s). Same result as applyAction for those.
+export function applyLegalAction(s, a) {
+  return stepAction(s, a).state;
+}
+
+// Unchecked apply that also hands back legalActions(state) when the new state is in an
+// open ball phase (the put-out check computes them anyway); otherwise ballMoves is null
+// and the caller asks legalActions itself.
+export function stepAction(s, a) {
   const team = s.turn;
   const n = cloneState(s);
   if (a.kind === 'move') {
@@ -241,11 +328,10 @@ export function applyAction(s, a) {
     if (ownerOfBall(n) === team) {
       n.phase = 'ball';
       n.ballMovesUsed = 0;
-      checkPutOut(n);
-    } else {
-      endTurn(n, false);
+      return { state: n, ballMoves: checkPutOut(n) };
     }
-    return n;
+    endTurn(n, false);
+    return { state: n, ballMoves: null };
   }
   n.ball = { x: a.to.x, y: a.to.y };
   if (goalDefender(n.ball) === otherTeam(team)) {
@@ -253,15 +339,14 @@ export function applyAction(s, a) {
     const r = initialState(team);
     r.score = score;
     if (score.W + score.R >= 2) r.result = { winner: leader(score), reason: 'goals' };
-    return r;
+    return { state: r, ballMoves: null };
   }
   if (ownerOfBall(n) === team) {
     n.ballMovesUsed += 1;
-    checkPutOut(n);
-    return n;
+    return { state: n, ballMoves: checkPutOut(n) };
   }
   const endLine = team === 'W' ? 6 : -6;
   // Spec line 49 (binding): any opponent end-line yellow square gives another turn.
   endTurn(n, n.ball.y === endLine && YELLOW_X.includes(n.ball.x));
-  return n;
+  return { state: n, ballMoves: null };
 }
