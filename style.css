@@ -1,0 +1,67 @@
+:root {
+  --bg: #2b2118; --panel: #3a2d21; --ink: #f6e9d0; --accent: #f2c832; --red: #b3201a;
+  --gap: 8px;
+}
+@media (min-width: 480px) { :root { --gap: 16px; } }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: Georgia, 'Times New Roman', serif; overflow-x: hidden; }
+.game { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); padding: var(--gap); max-width: 1280px; margin: 0 auto; }
+.board-wrap { min-width: 0; display: flex; justify-content: center; position: relative; }
+#board {
+  width: min(100%, calc((100vh - 32px) * 0.74));
+  touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.board-svg { display: block; width: 100%; height: auto; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.5); }
+.board-svg text { user-select: none; }
+.panel { background: var(--panel); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.panel h1 { margin: 0 0 8px; font-size: 1.6rem; color: var(--accent); }
+.panel h2 { margin: 14px 0 6px; font-size: 1rem; }
+.score { display: flex; gap: 20px; font-size: 1.2rem; }
+.team { display: flex; align-items: center; gap: 6px; }
+.chip { width: 16px; height: 16px; border-radius: 50%; display: inline-block; }
+.chip-w { background: radial-gradient(circle at 35% 30%, #fff, #e8e4da 45%, #9a968c); }
+.chip-r { background: radial-gradient(circle at 35% 30%, #ff9a8a, #d3241c 45%, #6e0a08); }
+.turn { font-weight: bold; font-size: 1.1rem; margin: 10px 0 2px; }
+.moves-left, .status { margin: 2px 0; min-height: 1.3em; }
+.status { color: var(--accent); }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+select, button { font: inherit; padding: 8px 12px; border-radius: 6px; border: 1px solid #00000055; min-height: 40px; }
+button { background: var(--red); color: #fff; cursor: pointer; }
+.toss, .level-note { margin: 6px 0 0; font-size: .9rem; opacity: .85; }
+.level-note:empty { display: none; }
+.message { margin: 2px 0; min-height: 1.3em; font-size: .95rem; }
+.banner {
+  position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 2;
+  width: min(86%, 320px); padding: 16px 18px; text-align: center;
+  background: rgba(43, 33, 24, .95); border: 3px solid var(--accent); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.6);
+}
+.banner[hidden] { display: none; }
+.banner p { margin: 0 0 10px; }
+.banner-title { font-size: 1.6rem; font-weight: bold; color: var(--accent); }
+#history { list-style: none; margin: 0; padding-left: 0; max-height: 220px; overflow-y: auto; font-size: .9rem; }
+
+/* Highlights */
+.target { fill: rgba(242, 200, 50, .85); stroke: #6b5200; stroke-width: 1; pointer-events: none; }
+.target-ring { fill: rgba(242, 200, 50, .18); stroke: #f2c832; stroke-width: 2; pointer-events: none; }
+.last-move { fill: rgba(255, 255, 255, .22); stroke: #fff; stroke-width: 2; stroke-dasharray: 5 3; pointer-events: none; }
+.counter.selected .body, .ball.selected .body { stroke: var(--accent); stroke-width: 4; }
+.arm { stroke-width: 7; stroke-linecap: round; pointer-events: none; }
+.pieces { pointer-events: none; }
+.hit rect { cursor: pointer; }
+
+/* Thinking state: dim the board; the controller blocks input. */
+#board[data-thinking="true"] .board-svg { filter: grayscale(.4) brightness(.8); cursor: progress; }
+#board[data-thinking="true"] .hit rect { cursor: progress; }
+
+/* Side-by-side on wide screens and on landscape phones (short but wide). */
+@media (min-width: 900px), (orientation: landscape) and (min-width: 560px) {
+  :root { --gap: 8px; }
+  .game { grid-template-columns: min(640px, calc((100vh - 2 * var(--gap)) * 0.74)) minmax(260px, 1fr); align-items: start; }
+  .board-wrap { justify-content: flex-start; }
+  #board { width: 100%; }
+}
+@media (min-width: 900px) and (min-height: 600px) { :root { --gap: 16px; } }
+@media (orientation: landscape) and (max-height: 500px) {
+  #history { max-height: 90px; }
+  .panel { padding: 8px 12px; }
+}
