@@ -4,7 +4,7 @@ A browser game: play the board game Mastergoal against the computer. Plain HTML,
 
 This is an unofficial fan implementation of Goalmind's Mastergoal, a personal project. It is not affiliated with or endorsed by Goalmind.
 
-Live: _URL to be added once GitHub Pages is enabled_
+Live: https://edupaz2.github.io/mastergoal/
 
 ## Run
 
