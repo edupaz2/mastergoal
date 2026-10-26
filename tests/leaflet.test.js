@@ -76,11 +76,18 @@ test('Spec (binding): no Player, nor a GK outside his area, enters either small 
 });
 
 test('Goal-keeper: same characteristics as a field Player out of his area; he may leave it', () => {
-  const s = board([[5, -3, 'G']]);
-  const t = counterTargets(s, { x: 5, y: -3 });
-  assert.ok(t.includes('5,-1'));
-  assert.ok(t.includes('5,-5'));
+  // Outside his area he moves 1 or 2 squares, and may step 2 back into it.
   assert.equal(counterTargets(board([[5, -1, 'G']]), { x: 5, y: -1 }).length, 16);
+  assert.ok(counterTargets(board([[5, -2, 'G']]), { x: 5, y: -2 }).includes('5,-4'));
+});
+
+test('Ruling (user): inside his area the Goal-keeper moves 1 square at a time', () => {
+  const t = counterTargets(board([[5, -3, 'G']]), { x: 5, y: -3 });
+  assert.ok(t.includes('5,-4'));
+  assert.ok(t.includes('5,-2'), 'he may step out of his area');
+  assert.ok(!t.includes('5,-5'));
+  assert.ok(!t.includes('5,-1'), '1 square even when leaving');
+  assert.equal(t.length, 8);
 });
 
 test('Goal-keeper: arms stay parallel to the goal line wherever he moves in his area', () => {

@@ -27,8 +27,10 @@ function destinations(s, from, team, isGk) {
   const out = [];
   // GK text: "No Player can go onto the Goal-keeper's side squares" (a GK may step onto his own).
   const opp = otherTeam(team);
+  // Ruling (user): inside his own area the GK moves 1 square; outside it, like a Player.
+  const reach = isGk && inLargeArea(from, team) ? 1 : 2;
   for (const [dx, dy] of DIRS) {
-    for (let d = 1; d <= 2; d++) {
+    for (let d = 1; d <= reach; d++) {
       const to = { x: from.x + dx * d, y: from.y + dy * d };
       if (!inPitch(to)) break;
       if (d === 2 && counterAt(s, { x: from.x + dx, y: from.y + dy })) break;
