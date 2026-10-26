@@ -84,6 +84,27 @@ test('the ball cannot cross a Goal-keeper arm square', () => {
   assert.ok(!ballTargets(s).includes('6,5'));
 });
 
+test('a Goal-keeper passing the ball may send it over himself', () => {
+  // White GK (5,-4) holds the ball (5,-5); (5,-2) is unowned, outside his large area.
+  const s = board([[5, -5, 'o'], [5, -4, 'G']], { phase: 'ball' });
+  assert.ok(ballTargets(s).includes('5,-2'));
+});
+
+test('a Goal-keeper passing the ball may send it over his own arm square', () => {
+  // Ball on the GK's arm (4,-4); it crosses him and his other arm (6,-4) to (7,-4),
+  // which belongs to the White Player at (8,-3).
+  const s = board([[4, -4, 'o'], [5, -4, 'G'], [8, -3, 'W']], { phase: 'ball' });
+  assert.ok(ballTargets(s).includes('7,-4'));
+});
+
+test('a Goal-keeper not passing still blocks his own team\'s ball', () => {
+  // The White Player (4,-1) passes; (5,-5) is the GK's, but lies beyond him.
+  const s = board([[5, -2, 'o'], [4, -1, 'W'], [5, -4, 'G']], { phase: 'ball' });
+  const t = ballTargets(s);
+  assert.ok(t.includes('5,-3'));
+  assert.ok(!t.includes('5,-5'));
+});
+
 test('the ball may jump a Goal-keeper outside his area and players', () => {
   const s = board([[5, -1, 'o'], [4, -2, 'W'], [5, 1, 'g'], [5, 0, 'R']], { phase: 'ball' });
   assert.ok(ballTargets(s).includes('5,3'));
@@ -237,10 +258,12 @@ test('Red scores toward y = -7', () => {
 // --- Put out ---
 
 // Ball on White's end line (5,-6). The White GK steps from (5,-4) to (5,-5) and takes
-// it: up is blocked by the GK, the diagonals start on his arm squares (his own,
-// self-pass) and cannot cross them, the end-line squares are either his alone
-// (self-pass) or unowned inside White's own large area, and the own goal is closed.
-const PUT_OUT = [[5, -6, 'o'], [5, -4, 'G']];
+// it. He may pass over himself and his arms, but every square is either his alone
+// (self-pass), unowned inside White's own large area, or (on row -2, just outside the
+// area) owned by the Reds on row -1. The end-line squares are his alone or unowned
+// inside the area, and the own goal is closed.
+const ROW_MINUS_1_REDS = [[1, -1, 'R'], [5, -1, 'R'], [9, -1, 'R']];
+const PUT_OUT = [[5, -6, 'o'], [5, -4, 'G'], ...ROW_MINUS_1_REDS];
 
 test('no legal destination for the obliged ball move ends the game: put out', () => {
   const s = move(board(PUT_OUT, { score: { W: 1, R: 0 } }), { x: 5, y: -4 }, { x: 5, y: -5 });
@@ -258,7 +281,7 @@ test('put out after a pass (move 3 received where move 4 has no legal square)', 
   // Ball (9,-6) held by (10,-5); 3rd move along the end line to (5,-6), owned by the
   // GK alone (he did not take the ball, so not a self-pass). The 4th move must end
   // unowned outside White's large area or score, and nothing qualifies.
-  const s0 = board([[9, -6, 'o'], [10, -5, 'W'], [5, -5, 'G']],
+  const s0 = board([[9, -6, 'o'], [10, -5, 'W'], [5, -5, 'G'], ...ROW_MINUS_1_REDS],
     { phase: 'ball', ballMovesUsed: 2, score: { W: 0, R: 1 } });
   const s = ball(s0, 5, -6);
   assert.deepEqual(s.result, { winner: 'R', reason: 'put-out' });

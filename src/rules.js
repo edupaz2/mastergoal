@@ -221,6 +221,12 @@ function ballGrid(s) {
   return GRID;
 }
 
+// True when (x, y) is `team`'s GK square or one of his arm squares.
+function passerSquare(s, team, x, y) {
+  const gk = s.gk[team];
+  return (gk.x === x && gk.y === y) || isArm(s, team, { x, y });
+}
+
 export function legalBallMoves(s) {
   if (s.result || s.phase !== 'ball') return [];
   const { occ, cnt, arm, block } = ballGrid(s);
@@ -233,6 +239,10 @@ export function legalBallMoves(s) {
   const other = cnt[opp];
   // Spec lines 61/89: every own counter next to the ball is a taker.
   const held = holders(s, s.ball, team);
+  // Fig. 6: the ball may be sent "in any direction, including that of the Player
+  // himself", so a passing GK and his arm squares never block his own pass.
+  const gk = s.gk[team];
+  const gkPasses = held.includes(gk);
   const bx = s.ball.x;
   const by = s.ball.y;
   const out = [];
@@ -240,10 +250,11 @@ export function legalBallMoves(s) {
     for (let d = 1; d <= 4; d++) {
       const x = bx + dx * d;
       const y = by + dy * d;
-      // The ball never crosses a GK inside his large area or his arm squares (gkBlocks).
+      // The ball never crosses a GK inside his large area or his arm squares (gkBlocks),
+      // unless that GK is the one passing.
       // Ball text: it never jumps "over the Players that are in the small area";
       // defensive: with the small-area ban only a GK can stand there.
-      if (d > 1 && block[sqIndex(x - dx, y - dy)]) break;
+      if (d > 1 && block[sqIndex(x - dx, y - dy)] && !(gkPasses && passerSquare(s, team, x - dx, y - dy))) break;
       if (!inPitchXY(x, y)) {
         // Only the opponent's goal, entered diagonally or straight forward.
         if (goalDefender({ x, y }) === opp && (dx !== 0 || dy === forward)) out.push({ kind: 'ball', to: { x, y } });
