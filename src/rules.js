@@ -353,7 +353,8 @@ export function stepAction(s, a) {
     const score = { ...n.score, [team]: n.score[team] + 1 };
     const r = initialState(team);
     r.score = score;
-    if (score.W + score.R >= 2) r.result = { winner: leader(score), reason: 'goals' };
+    // Ruling (user): best of 3, the first side to 2 goals wins.
+    if (score[team] >= 2) r.result = { winner: team, reason: 'goals' };
     return { state: r, ballMoves: null };
   }
   if (ownerOfBall(n) === team) {
