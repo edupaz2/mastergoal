@@ -249,7 +249,9 @@ export function legalBallMoves(s) {
   const by = s.ball.y;
   const out = [];
   for (const [dx, dy] of DIRS) {
-    for (let d = 1; d <= 4; d++) {
+    // Ruling (user): the passer's own square, always the first one, is not counted.
+    const overPasser = held.some((h) => h.x === bx + dx && h.y === by + dy);
+    for (let d = 1; d <= (overPasser ? 5 : 4); d++) {
       const x = bx + dx * d;
       const y = by + dy * d;
       // The ball never crosses a GK inside his large area or his arm squares (gkBlocks),

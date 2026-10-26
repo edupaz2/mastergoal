@@ -97,6 +97,38 @@ test('a Goal-keeper passing the ball may send it over his own arm square', () =>
   assert.ok(ballTargets(s).includes('7,-4'));
 });
 
+test('the passer\'s own square does not count toward the 4 squares', () => {
+  // User's example: ball (7,4.), Player (6,3.) passes over himself to (3,1), 5 squares
+  // away on the diagonal, the first being his own.
+  const s = board([[8, -4, 'o'], [7, -3, 'W']], { phase: 'ball' });
+  const t = ballTargets(s);
+  assert.ok(t.includes('3,1'));
+  assert.ok(!t.includes('2,2'), 'still 4 squares beyond him');
+  // Other directions keep the plain 4.
+  assert.ok(t.includes('8,0'));
+  assert.ok(!t.includes('8,1'));
+});
+
+test('a jumped counter that is not the passer still counts toward the 4 squares', () => {
+  // White passes from (5,0) held by (4,-1); the Red at (5,1) is jumped, not passing.
+  const s = board([[5, 0, 'o'], [4, -1, 'W'], [5, 1, 'R']], { phase: 'ball' });
+  const t = ballTargets(s);
+  assert.ok(t.includes('5,4'));
+  assert.ok(!t.includes('5,5'));
+});
+
+test('a passing Goal-keeper\'s own square does not count; his arm squares do', () => {
+  // White GK (5,-4) holds the ball (5,-5): over himself up to (5,-1).
+  const s = board([[5, -5, 'o'], [5, -4, 'G']], { phase: 'ball' });
+  assert.ok(ballTargets(s).includes('5,-1'));
+  // Ball on his arm (4,-4): sideways over him and his other arm (6,-4) it reaches
+  // (9,-4) at most, owned by the White Player at (9,-3).
+  const a = board([[4, -4, 'o'], [5, -4, 'G'], [9, -3, 'W']], { phase: 'ball' });
+  assert.ok(ballTargets(a).includes('9,-4'));
+  const b = board([[4, -4, 'o'], [5, -4, 'G'], [10, -3, 'W']], { phase: 'ball' });
+  assert.ok(!ballTargets(b).includes('10,-4'), 'the arm square counts');
+});
+
 test('a Goal-keeper not passing still blocks his own team\'s ball', () => {
   // The White Player (4,-1) passes; (5,-5) is the GK's, but lies beyond him.
   const s = board([[5, -2, 'o'], [4, -1, 'W'], [5, -4, 'G']], { phase: 'ball' });

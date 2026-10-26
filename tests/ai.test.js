@@ -125,10 +125,10 @@ test('generateTurns finds a put-out reached by passing into a dead end on the la
   // From random play: Red can end the game only via a pass sequence whose last pass
   // (ballMovesUsed 3) lands on a square with no legal leave.
   const s = initialState('R');
-  s.players.W = [{ x: 0, y: -1 }, { x: 8, y: -1 }, { x: 3, y: -3 }, { x: 7, y: -3 }];
-  s.players.R = [{ x: 4, y: -1 }, { x: 8, y: 1 }, { x: 3, y: 3 }, { x: 9, y: 1 }];
-  s.gk = { W: { x: 3, y: -5 }, R: { x: 5, y: 5 } };
-  s.ball = { x: 6, y: 2 };
+  s.players.W = [{ x: 2, y: -1 }, { x: 8, y: -1 }, { x: 5, y: -1 }, { x: 7, y: -3 }];
+  s.players.R = [{ x: 2, y: 1 }, { x: 8, y: 1 }, { x: 3, y: 3 }, { x: 7, y: 3 }];
+  s.gk = { W: { x: 5, y: -5 }, R: { x: 5, y: 5 } };
+  s.ball = { x: 0, y: 2 };
   assert.ok(bruteOutcomes(s).has('put-out'));
   assert.ok(generateTurns(s).some((t) => t.state.result?.reason === 'put-out'));
 });
