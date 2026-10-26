@@ -15,7 +15,7 @@ import { initAnalytics, track } from './analytics.js';
 
 const USER = 'W';
 const CPU = 'R';
-const STEP_MS = 400;           // spacing between the computer's actions
+const STEP_MS = 3000;          // each computer action stays on screen this long
 const MIN_THINK_MS = 400;      // the "thinking" state stays visible at least this long
 const FALLBACK_TIME_MS = 1500; // main-thread search budget when the worker is unusable
 const WORKER_TIMEOUT_MS = 12000;
@@ -235,6 +235,8 @@ async function computerTurn() {
     play(actions[i]);
     redraw();
     if (state.result) break;
+    // No wait once the turn is the user's: the last move stays highlighted.
+    if (state.turn === USER) break;
     await delay(STEP_MS);
     if (id !== gameId) return;
   }
