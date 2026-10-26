@@ -11,6 +11,7 @@ import { legalActions, applyAction } from './rules.js';
 import { chooseTurn } from './ai.js';
 import { describeTurn, createHistory } from './history.js';
 import { sqEq } from './board.js';
+import { initAnalytics, track } from './analytics.js';
 
 const USER = 'W';
 const CPU = 'R';
@@ -300,6 +301,7 @@ function redraw() {
 function showBanner() {
   const r = state.result;
   const title = r.winner === USER ? 'You win!' : r.winner === CPU ? 'You lose' : 'Draw';
+  track(r.winner === USER ? 'game-won' : r.winner === CPU ? 'game-lost' : 'game-drawn');
   const score = `${state.score.W}:${state.score.R}`;
   const reason = r.reason === 'goals' ? `Final score ${score}.` : `Ball put out at ${score}.`;
   $('banner-title').textContent = title;
@@ -332,9 +334,16 @@ function newGame() {
 }
 
 levelSelect.addEventListener('change', () => {
+  track(`level-${levelSelect.value}`);
   $('level-note').textContent = levelSelect.value === level ? '' : 'The new level starts with the next New game.';
 });
-$('new-game').addEventListener('click', newGame);
-$('banner-new').addEventListener('click', newGame);
+// Only the buttons count as new-game; the first game starts on page load.
+const onNewGame = () => {
+  track('new-game');
+  newGame();
+};
+$('new-game').addEventListener('click', onNewGame);
+$('banner-new').addEventListener('click', onNewGame);
 
+initAnalytics();
 newGame();
