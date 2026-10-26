@@ -63,9 +63,10 @@ test('never off pitch; goal-keeper rules', () => {
   assert.ok(gm.length > 0 && gm.every((m) => m.piece.kind === 'G'));
   assert.ok(has(g, 5, -6));
   // Leaflet: he has a field Player's characteristics "when he is out of his area",
-  // so he may leave it.
+  // so he may leave it (1 square at a time from inside, by the user's ruling).
   const e = stateFromAscii(put(emptyRows(), 5, -3, 'G'));
-  assert.ok(has(e, 5, -1));
+  assert.ok(has(e, 5, -2));
+  assert.ok(!has(e, 5, -1));
   const o = stateFromAscii(put(emptyRows(), 5, -1, 'G'));
   assert.equal(legalCounterMoves(o).length, 16);
 });
