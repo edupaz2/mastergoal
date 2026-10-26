@@ -15,7 +15,7 @@ import { initAnalytics, track } from './analytics.js';
 
 const USER = 'W';
 const CPU = 'R';
-const STEP_MS = 400;           // spacing between the computer's actions
+const STEP_MS = 3000;          // each computer action stays on screen this long
 const MIN_THINK_MS = 400;      // the "thinking" state stays visible at least this long
 const FALLBACK_TIME_MS = 1500; // main-thread search budget when the worker is unusable
 const WORKER_TIMEOUT_MS = 12000;
@@ -39,6 +39,7 @@ let turnActions = [];
 let turnNo = 0;
 let note = '';          // controller message under the status line
 let endNote = '';
+let goalView = null;    // the computer's goal kept on screen, before the kick-off reset
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 const samePiece = (a, b) => !!a && !!b && a.team === b.team && a.kind === b.kind && a.index === b.index;
@@ -142,6 +143,7 @@ function play(a) {
     lastMove = [];
   }
   const team = state.turn;
+  const prev = state;
   const from = fromSquare(state, a);
   const scoreBefore = state.score[team];
   state = applyAction(state, a);
@@ -158,6 +160,8 @@ function play(a) {
   turnActions = [];
   turnBefore = null;
   if (scored) {
+    // Shown during the pause that follows: the ball in the goal, new score.
+    if (team === CPU) goalView = { state: { ...state, players: prev.players, gk: prev.gk, ball: a.to }, lastMove };
     lastMove = []; // counters are back on their start squares
     note = team === USER ? 'Goal! You kick off again.' : 'Red scores and kicks off again.';
   } else if (state.bonusTurn) {
@@ -235,8 +239,11 @@ async function computerTurn() {
     play(actions[i]);
     redraw();
     if (state.result) break;
+    // No wait once the turn is the user's: the last move stays highlighted.
+    if (state.turn === USER) break;
     await delay(STEP_MS);
     if (id !== gameId) return;
+    goalView = null;
   }
   busy = false;
   next(); // asks again while it is still Red's turn (after a goal or a bonus square)
@@ -284,10 +291,11 @@ function redraw() {
     if (state.phase === 'ball') targets = legal.map((m) => m.to);
     else if (selected) targets = legal.filter((m) => samePiece(m.piece, selected)).map((m) => m.to);
   }
-  view.render(state, { selected, targets, lastMove, thinking });
+  const shown = goalView ?? { state, lastMove };
+  view.render(shown.state, { selected, targets, lastMove: shown.lastMove, thinking });
   let msg = note;
   if (!state.result) {
-    if (busy && !thinking) msg = 'Red is moving...';
+    if (busy && !thinking && !goalView) msg = 'Red is moving...';
     else if (!busy && state.turn === USER) {
       const hint = state.phase === 'ball'
         ? 'Move the ball: tap a highlighted square.'
@@ -324,6 +332,7 @@ function newGame() {
   turnNo = 0;
   note = '';
   endNote = '';
+  goalView = null;
   history.clear();
   $('banner').hidden = true;
   const first = Math.random() < 0.5 ? USER : CPU;
