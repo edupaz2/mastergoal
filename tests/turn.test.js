@@ -274,10 +274,23 @@ test('a second goal ends the match with the right winner', () => {
   assert.deepEqual(legalActions(s), []);
 });
 
-test('a 1:1 match is a draw', () => {
+// Ruling (user): best of 3, the first side to 2 goals wins (2:0, 2:1, 1:2, 0:2).
+test('at 1:1 the match goes on', () => {
   const s = ball(board(NEAR_GOAL, { phase: 'ball', score: { W: 0, R: 1 } }), 5, 7);
-  assert.deepEqual(s.result, { winner: null, reason: 'goals' });
-  assert.equal(isOver(s), true);
+  assert.deepEqual(s.score, { W: 1, R: 1 });
+  assert.equal(s.result, null);
+  assert.equal(isOver(s), false);
+  assert.equal(s.turn, 'W', 'the scorer kicks off');
+  assertInitialCounters(s);
+});
+
+test('a goal from 1:1 wins the match 2:1', () => {
+  const s = ball(board(NEAR_GOAL, { phase: 'ball', score: { W: 1, R: 1 } }), 5, 7);
+  assert.deepEqual(s.score, { W: 2, R: 1 });
+  assert.deepEqual(s.result, { winner: 'W', reason: 'goals' });
+  const r = ball(board([[5, -4, 'o'], [4, -3, 'R']], { phase: 'ball', turn: 'R', score: { W: 1, R: 1 } }), 5, -7);
+  assert.deepEqual(r.score, { W: 1, R: 2 });
+  assert.deepEqual(r.result, { winner: 'R', reason: 'goals' });
 });
 
 test('Red scores toward y = -7', () => {
