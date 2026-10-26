@@ -36,7 +36,11 @@ function defs(svg) {
   };
   grad('g-W', '#ffffff', '#e8e4da', '#9a968c');
   grad('g-R', '#ff9a8a', '#d3241c', '#6e0a08');
-  grad('g-ball', '#fffdf2', '#efe2b8', '#a89868');
+  // Ball shading: a translucent highlight-to-shadow layer over its white and yellow quarters.
+  const shade = el('radialGradient', { id: 'g-ball-shade', cx: '35%', cy: '30%', r: '70%' }, d);
+  el('stop', { offset: '0', 'stop-color': '#fff', 'stop-opacity': 0.5 }, shade);
+  el('stop', { offset: '0.45', 'stop-color': '#fff', 'stop-opacity': 0 }, shade);
+  el('stop', { offset: '1', 'stop-color': '#000', 'stop-opacity': 0.35 }, shade);
 }
 
 function buildStatic(svg, onClick) {
@@ -150,7 +154,16 @@ export function createBoardView(root, handlers) {
     const b = state.ball;
     const bg = el('g', { class: 'ball' }, pieces);
     el('circle', { cx: cx(b.x) + 1, cy: cy(b.y) + 2, r: 9, fill: 'rgba(0,0,0,.4)' }, bg);
-    el('circle', { class: 'body', cx: cx(b.x), cy: cy(b.y), r: 9, fill: 'url(#g-ball)', stroke: '#8a7a48', 'stroke-width': 1 }, bg);
+    // Quartered like the leaflet's ball (Fig. 3): white, with yellow top-right and
+    // bottom-left quarters.
+    const [bx, by, r] = [cx(b.x), cy(b.y), 9];
+    el('circle', { cx: bx, cy: by, r, fill: '#fbfaf5' }, bg);
+    el('path', {
+      d: `M${bx} ${by}H${bx + r}A${r} ${r} 0 0 0 ${bx} ${by - r}Z M${bx} ${by}H${bx - r}A${r} ${r} 0 0 0 ${bx} ${by + r}Z`,
+      fill: '#f5c518',
+    }, bg);
+    el('circle', { cx: bx, cy: by, r, fill: 'url(#g-ball-shade)' }, bg);
+    el('circle', { class: 'body', cx: bx, cy: by, r, fill: 'none', stroke: '#8a7a48', 'stroke-width': 1 }, bg);
 
     // Side panel (each element optional so the view works without the page shell).
     const set = (id, txt) => { const n = document.getElementById(id); if (n) n.textContent = txt; };
