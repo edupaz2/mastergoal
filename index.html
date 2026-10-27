@@ -10,18 +10,18 @@
 <body>
 <main class="game">
   <section class="board-wrap">
-    <div id="board" aria-label="Mastergoal board"></div>
+    <div id="board" aria-label="Mastergoal board" data-i18n-label="board"></div>
     <div id="banner" class="banner" role="dialog" aria-live="assertive" aria-labelledby="banner-title" hidden>
       <p id="banner-title" class="banner-title"></p>
       <p id="banner-reason"></p>
-      <button id="banner-new" type="button">New game</button>
+      <button id="banner-new" type="button" data-i18n="newGame">New game</button>
     </div>
   </section>
   <aside class="panel">
     <h1>Mastergoal</h1>
     <div class="score" aria-live="polite">
-      <div class="team"><span class="chip chip-w"></span> White <b id="score-w">0</b></div>
-      <div class="team"><span class="chip chip-r"></span> Red <b id="score-r">0</b></div>
+      <div class="team"><span class="chip chip-w"></span> <span data-i18n="white">White</span> <b id="score-w">0</b></div>
+      <div class="team"><span class="chip chip-r"></span> <span data-i18n="red">Red</span> <b id="score-r">0</b></div>
     </div>
     <p id="toss" class="toss"></p>
     <p id="turn" class="turn"></p>
@@ -29,23 +29,24 @@
     <p id="status" class="status" role="status" aria-live="polite"></p>
     <p id="message" class="message"></p>
     <div class="controls">
-      <label for="level">Level</label>
+      <label for="level" data-i18n="level">Level</label>
       <select id="level">
-        <option value="beginner">Beginner</option>
-        <option value="medium" selected>Medium</option>
-        <option value="master">Master</option>
+        <option value="beginner" data-i18n="beginner">Beginner</option>
+        <option value="medium" selected data-i18n="medium">Medium</option>
+        <option value="master" data-i18n="master">Master</option>
       </select>
-      <button id="new-game" type="button">New game</button>
-      <button id="rules-open" type="button" class="secondary">Rules</button>
+      <button id="new-game" type="button" data-i18n="newGame">New game</button>
+      <button id="rules-open" type="button" class="secondary" data-i18n="rules">Rules</button>
     </div>
     <p id="level-note" class="level-note"></p>
-    <h2>Moves</h2>
+    <h2 data-i18n="moves">Moves</h2>
     <ol id="history"></ol>
   </aside>
 </main>
-<dialog id="rules" class="rules" aria-labelledby="rules-title">
-  <form method="dialog" class="rules-close"><button type="submit" aria-label="Close rules">Close</button></form>
-  <h2 id="rules-title">How to play</h2>
+<dialog id="rules" class="rules" aria-label="Rules" data-i18n-label="rules">
+  <form method="dialog" class="rules-close"><button type="submit" aria-label="Close rules" data-i18n-label="closeRules" data-i18n="close">Close</button></form>
+  <div class="rules-body" data-lang="en" lang="en">
+  <h2>How to play</h2>
   <p>You play White and the computer plays Red. Each team has 4 Players and 1 Goal-keeper (G). They share one Ball. A coin toss decides who starts.</p>
 
   <h3>Winning</h3>
@@ -91,6 +92,252 @@
 
   <h3>Ball put out</h3>
   <p>If a team must move the Ball but has no allowed square to send it to, the game ends at once. The team ahead wins; a level score is a draw.</p>
+  </div>
+
+  <div class="rules-body" data-lang="es" lang="es" hidden>
+  <h2>Cómo se juega</h2>
+  <p>Tú juegas con Blanco y el ordenador con Rojo. Cada equipo tiene 4 Jugadores y 1 Portero (G). Comparten un Balón. Un sorteo decide quién empieza.</p>
+
+  <h3>Cómo se gana</h3>
+  <p>Al mejor de 3: gana el primer equipo que marca 2 goles (2-0, 2-1, 1-2 o 0-2). Tú atacas la portería de Rojo, arriba; Rojo ataca la tuya, abajo.</p>
+
+  <h3>Tu turno</h3>
+  <ol>
+    <li>Mueve una ficha: un Jugador o tu Portero.</li>
+    <li>Si esa ficha queda junto al Balón y el Balón es tuyo (ver abajo), <b>debes</b> mover el Balón, hasta 4 veces.</li>
+    <li>Si no, tu turno termina.</li>
+  </ol>
+
+  <h3>Mover las fichas</h3>
+  <ul>
+    <li>Un Jugador se mueve 1 o 2 casillas en línea recta, en cualquiera de las 8 direcciones. No puede saltar otras fichas ni caer en una casilla ocupada.</li>
+    <li>Dentro de su propia área grande, el Portero se mueve de 1 en 1 casilla. Fuera de ella se mueve como un Jugador.</li>
+    <li>Un equipo nunca puede pisar sus dos esquinas propias. El otro equipo sí.</li>
+    <li>Los Jugadores pueden entrar en las áreas pequeñas.</li>
+  </ul>
+
+  <h3>De quién es el Balón</h3>
+  <ul>
+    <li>Una casilla es de un equipo cuando ese equipo tiene más fichas en las 8 casillas que la rodean. Con el mismo número es neutral.</li>
+    <li>Dentro de su propia área grande, el Portero tiene "brazos": las casillas justo a su izquierda y a su derecha. Un Balón en una casilla de brazo siempre es suyo. Ningún Jugador puede pisar las casillas de brazo.</li>
+  </ul>
+
+  <h3>Mover el Balón</h3>
+  <ul>
+    <li>El Balón se mueve en línea recta, en cualquiera de las 8 direcciones, hasta 4 casillas. La casilla de quien pasa no cuenta para las 4.</li>
+    <li>Puede pasar por encima de los Jugadores, incluido el que pasa. No puede pasar por encima de un Portero dentro de su área grande, de sus casillas de brazo, ni de un defensor dentro de su propia área pequeña. El Portero que pasa nunca bloquea su propio pase.</li>
+    <li>Cada movimiento del Balón es un pase o el último movimiento. Un pase cae en una casilla de tu equipo, y entonces vuelves a mover el Balón. No puedes pasar a una casilla que sea solo del Jugador que acaba de pasar.</li>
+    <li>El último movimiento deja el Balón en una casilla que no es de tu equipo (neutral, o sin nadie al lado) y fuera de tu propia área grande. Entonces tu turno termina.</li>
+    <li>El 4.º movimiento del Balón debe ser el último. No hace falta usar los 4.</li>
+    <li>El Balón no puede ir a tus esquinas propias, salvo que haya una ficha junto a ellas.</li>
+  </ul>
+
+  <h3>Goles y turnos extra</h3>
+  <ul>
+    <li>Es gol cuando el Balón entra en la portería del otro equipo, moviéndose en diagonal o recto hacia delante (no de lado a lo largo de la línea de gol).</li>
+    <li>Tras un gol todas las fichas vuelven a su casilla de salida, y saca el equipo que recibió el gol.</li>
+    <li>Si tu turno termina con el Balón en uno de los puntos amarillos de la línea de fondo del otro equipo, juegas otro turno.</li>
+  </ul>
+
+  <h3>Balón fuera</h3>
+  <p>Si un equipo debe mover el Balón pero no tiene ninguna casilla permitida a la que enviarlo, la partida termina en ese momento. Gana el equipo que va por delante; con el marcador igualado es empate.</p>
+  </div>
+
+  <div class="rules-body" data-lang="pt" lang="pt" hidden>
+  <h2>Como jogar</h2>
+  <p>Você joga com o Branco e o computador com o Vermelho. Cada equipe tem 4 Jogadores e 1 Goleiro (G). Elas compartilham uma Bola. Um sorteio decide quem começa.</p>
+
+  <h3>Como vencer</h3>
+  <p>Melhor de 3: vence a primeira equipe que marcar 2 gols (2-0, 2-1, 1-2 ou 0-2). Você ataca o gol do Vermelho, em cima; o Vermelho ataca o seu, embaixo.</p>
+
+  <h3>Sua vez</h3>
+  <ol>
+    <li>Mova uma peça: um Jogador ou o seu Goleiro.</li>
+    <li>Se essa peça ficar ao lado da Bola e a Bola for sua (veja abaixo), você <b>deve</b> mover a Bola, até 4 vezes.</li>
+    <li>Caso contrário, sua vez termina.</li>
+  </ol>
+
+  <h3>Mover as peças</h3>
+  <ul>
+    <li>Um Jogador anda 1 ou 2 casas em linha reta, em qualquer das 8 direções. Não pode pular outras peças nem parar numa casa ocupada.</li>
+    <li>Dentro da sua própria grande área, o Goleiro anda 1 casa por vez. Fora dela, anda como um Jogador.</li>
+    <li>Uma equipe nunca pode pisar nos seus dois cantos. A outra equipe pode.</li>
+    <li>Os Jogadores podem entrar nas pequenas áreas.</li>
+  </ul>
+
+  <h3>De quem é a Bola</h3>
+  <ul>
+    <li>Uma casa é de uma equipe quando essa equipe tem mais peças nas 8 casas ao redor dela. Com o mesmo número, ela é neutra.</li>
+    <li>Dentro da sua própria grande área, o Goleiro tem "braços": as casas logo à esquerda e à direita dele. Uma Bola numa casa de braço é sempre dele. Nenhum Jogador pode pisar nas casas de braço.</li>
+  </ul>
+
+  <h3>Mover a Bola</h3>
+  <ul>
+    <li>A Bola anda em linha reta, em qualquer das 8 direções, até 4 casas. A casa de quem passa não conta para as 4.</li>
+    <li>Ela pode passar por cima dos Jogadores, inclusive de quem passa. Não pode passar por cima de um Goleiro dentro da sua grande área, das casas de braço dele, nem de um defensor dentro da sua própria pequena área. O Goleiro que passa nunca bloqueia o próprio passe.</li>
+    <li>Cada movimento da Bola é um passe ou o último movimento. Um passe para numa casa da sua equipe, e então você move a Bola de novo. Não é permitido passar para uma casa que seja só do Jogador que acabou de passar.</li>
+    <li>O último movimento deixa a Bola numa casa que não é da sua equipe (neutra, ou sem ninguém ao lado) e fora da sua própria grande área. Então sua vez termina.</li>
+    <li>O 4.º movimento da Bola tem de ser o último. Não é preciso usar os 4.</li>
+    <li>A Bola não pode ir para os seus cantos, a não ser que haja uma peça ao lado deles.</li>
+  </ul>
+
+  <h3>Gols e turnos extras</h3>
+  <ul>
+    <li>É gol quando a Bola entra no gol da outra equipe, andando na diagonal ou reto para a frente (não de lado ao longo da linha de gol).</li>
+    <li>Depois de um gol, todas as peças voltam às casas iniciais, e a equipe que sofreu o gol dá a saída.</li>
+    <li>Se a sua vez terminar com a Bola num dos pontos amarelos da linha de fundo da outra equipe, você joga mais um turno.</li>
+  </ul>
+
+  <h3>Bola fora</h3>
+  <p>Se uma equipe precisa mover a Bola mas não tem nenhuma casa permitida para onde mandá-la, o jogo termina na hora. Vence a equipe que está na frente; com o placar empatado, é empate.</p>
+  </div>
+
+  <div class="rules-body" data-lang="fr" lang="fr" hidden>
+  <h2>Comment jouer</h2>
+  <p>Vous jouez les Blancs et l’ordinateur les Rouges. Chaque équipe a 4 Joueurs et 1 Gardien (G). Elles partagent un Ballon. Un tirage au sort désigne qui commence.</p>
+
+  <h3>Gagner</h3>
+  <p>En deux manches gagnantes : la première équipe qui marque 2 buts gagne (2-0, 2-1, 1-2 ou 0-2). Vous attaquez le but rouge, en haut ; Rouge attaque le vôtre, en bas.</p>
+
+  <h3>Votre tour</h3>
+  <ol>
+    <li>Déplacez un pion : un Joueur ou votre Gardien.</li>
+    <li>Si ce pion se retrouve à côté du Ballon et que le Ballon est à vous (voir plus bas), vous <b>devez</b> déplacer le Ballon, jusqu’à 4 fois.</li>
+    <li>Sinon, votre tour se termine.</li>
+  </ol>
+
+  <h3>Déplacer les pions</h3>
+  <ul>
+    <li>Un Joueur avance de 1 ou 2 cases en ligne droite, dans l’une des 8 directions. Il ne peut pas sauter par-dessus d’autres pions ni s’arrêter sur une case occupée.</li>
+    <li>Dans sa propre grande surface, le Gardien avance d’1 case à la fois. En dehors, il se déplace comme un Joueur.</li>
+    <li>Une équipe ne peut jamais aller sur ses deux propres cases de coin. L’autre équipe le peut.</li>
+    <li>Les Joueurs peuvent entrer dans les petites surfaces.</li>
+  </ul>
+
+  <h3>À qui est le Ballon</h3>
+  <ul>
+    <li>Une case appartient à une équipe quand celle-ci a plus de pions sur les 8 cases qui l’entourent. À égalité, elle est neutre.</li>
+    <li>Dans sa propre grande surface, le Gardien a des « bras » : les cases juste à sa gauche et à sa droite. Un Ballon sur une case de bras est toujours à lui. Aucun Joueur ne peut aller sur les cases de bras.</li>
+  </ul>
+
+  <h3>Déplacer le Ballon</h3>
+  <ul>
+    <li>Le Ballon se déplace en ligne droite, dans l’une des 8 directions, jusqu’à 4 cases. La case du passeur ne compte pas dans les 4.</li>
+    <li>Il peut passer par-dessus les Joueurs, y compris le passeur. Il ne peut pas passer par-dessus un Gardien dans sa grande surface, ses cases de bras, ni un défenseur dans sa propre petite surface. Le Gardien qui passe ne bloque jamais sa propre passe.</li>
+    <li>Chaque déplacement du Ballon est soit une passe, soit le dernier déplacement. Une passe arrive sur une case de votre équipe, puis vous déplacez à nouveau le Ballon. Vous ne pouvez pas passer vers une case qui n’appartient qu’au Joueur qui vient de faire la passe.</li>
+    <li>Le dernier déplacement laisse le Ballon sur une case qui n’est pas à votre équipe (neutre, ou sans personne à côté) et hors de votre propre grande surface. Votre tour se termine alors.</li>
+    <li>Le 4e déplacement du Ballon doit être le dernier. Vous n’êtes pas obligé d’utiliser les 4.</li>
+    <li>Le Ballon ne peut pas aller sur vos propres cases de coin, sauf si un pion se trouve à côté.</li>
+  </ul>
+
+  <h3>Buts et tours bonus</h3>
+  <ul>
+    <li>Il y a but quand le Ballon entre dans le but adverse, en diagonale ou tout droit vers l’avant (pas de côté le long de la ligne de but).</li>
+    <li>Après un but, tous les pions reviennent sur leur case de départ, et l’équipe qui a encaissé le but donne le coup d’envoi.</li>
+    <li>Si votre tour se termine avec le Ballon sur l’un des points jaunes de la ligne de fond adverse, vous rejouez un tour.</li>
+  </ul>
+
+  <h3>Ballon sorti</h3>
+  <p>Si une équipe doit déplacer le Ballon mais n’a aucune case autorisée où l’envoyer, la partie s’arrête aussitôt. L’équipe qui mène gagne ; à égalité, c’est un match nul.</p>
+  </div>
+
+  <div class="rules-body" data-lang="it" lang="it" hidden>
+  <h2>Come si gioca</h2>
+  <p>Tu giochi con il Bianco e il computer con il Rosso. Ogni squadra ha 4 Giocatori e 1 Portiere (G). Condividono un Pallone. Un sorteggio decide chi inizia.</p>
+
+  <h3>Come si vince</h3>
+  <p>Al meglio delle 3: vince la prima squadra che segna 2 gol (2-0, 2-1, 1-2 o 0-2). Tu attacchi la porta del Rosso, in alto; il Rosso attacca la tua, in basso.</p>
+
+  <h3>Il tuo turno</h3>
+  <ol>
+    <li>Muovi una pedina: un Giocatore o il tuo Portiere.</li>
+    <li>Se quella pedina si trova accanto al Pallone e il Pallone è tuo (vedi sotto), <b>devi</b> muovere il Pallone, fino a 4 volte.</li>
+    <li>Altrimenti il tuo turno finisce.</li>
+  </ol>
+
+  <h3>Muovere le pedine</h3>
+  <ul>
+    <li>Un Giocatore si muove di 1 o 2 caselle in linea retta, in una qualsiasi delle 8 direzioni. Non può saltare altre pedine né fermarsi su una casella occupata.</li>
+    <li>Dentro la propria area grande il Portiere si muove di 1 casella alla volta. Fuori si muove come un Giocatore.</li>
+    <li>Una squadra non può mai entrare nelle sue due caselle d’angolo. L’altra squadra sì.</li>
+    <li>I Giocatori possono entrare nelle aree piccole.</li>
+  </ul>
+
+  <h3>Di chi è il Pallone</h3>
+  <ul>
+    <li>Una casella appartiene a una squadra quando quella squadra ha più pedine nelle 8 caselle intorno. A parità è neutra.</li>
+    <li>Dentro la propria area grande il Portiere ha le "braccia": le caselle subito a sinistra e a destra di lui. Un Pallone su una casella delle braccia è sempre suo. Nessun Giocatore può entrare nelle caselle delle braccia.</li>
+  </ul>
+
+  <h3>Muovere il Pallone</h3>
+  <ul>
+    <li>Il Pallone si muove in linea retta, in una qualsiasi delle 8 direzioni, fino a 4 caselle. La casella di chi passa non conta nelle 4.</li>
+    <li>Può passare sopra i Giocatori, compreso chi passa. Non può passare sopra un Portiere dentro la sua area grande, sulle caselle delle sue braccia, né sopra un difensore dentro la propria area piccola. Il Portiere che passa non blocca mai il proprio passaggio.</li>
+    <li>Ogni mossa del Pallone è un passaggio o l’ultima mossa. Un passaggio arriva su una casella della tua squadra, e poi muovi di nuovo il Pallone. Non puoi passare su una casella che appartiene solo al Giocatore che ha appena passato.</li>
+    <li>L’ultima mossa lascia il Pallone su una casella che non è della tua squadra (neutra, o senza nessuno accanto) e fuori dalla tua area grande. Poi il tuo turno finisce.</li>
+    <li>La 4ª mossa del Pallone deve essere l’ultima. Non serve usarle tutte e 4.</li>
+    <li>Il Pallone non può andare nelle tue caselle d’angolo, a meno che accanto ci sia una pedina.</li>
+  </ul>
+
+  <h3>Gol e turni bonus</h3>
+  <ul>
+    <li>È gol quando il Pallone entra nella porta avversaria, muovendosi in diagonale o dritto in avanti (non di lato lungo la linea di porta).</li>
+    <li>Dopo un gol tutte le pedine tornano alla casella di partenza, e la squadra che ha subito il gol batte il calcio d’inizio.</li>
+    <li>Se il tuo turno finisce con il Pallone su uno dei punti gialli della linea di fondo avversaria, giochi un altro turno.</li>
+  </ul>
+
+  <h3>Palla fuori</h3>
+  <p>Se una squadra deve muovere il Pallone ma non ha nessuna casella consentita dove mandarlo, la partita finisce subito. Vince la squadra in vantaggio; a punteggio pari è pareggio.</p>
+  </div>
+
+  <div class="rules-body" data-lang="zh" lang="zh-Hans" hidden>
+  <h2>玩法</h2>
+  <p>你执白方，电脑执红方。每队有 4 名球员和 1 名守门员（G），两队共用一个球。掷硬币决定谁先走。</p>
+
+  <h3>胜负</h3>
+  <p>三局两胜制：先进 2 球的一方获胜（2-0、2-1、1-2 或 0-2）。你进攻上方红方的球门，红方进攻下方你的球门。</p>
+
+  <h3>你的回合</h3>
+  <ol>
+    <li>移动一枚棋子：一名球员或你的守门员。</li>
+    <li>如果这枚棋子移到球旁边，并且球归你方（见下文），你<b>必须</b>移动球，最多 4 次。</li>
+    <li>否则你的回合结束。</li>
+  </ol>
+
+  <h3>移动棋子</h3>
+  <ul>
+    <li>球员沿直线向 8 个方向中的任意一个移动 1 或 2 格。不能跳过其他棋子，也不能停在有棋子的格子上。</li>
+    <li>守门员在本方大禁区内每次只能移动 1 格；在禁区外则像球员一样移动。</li>
+    <li>一方永远不能走进本方的两个角格，对方可以。</li>
+    <li>球员可以进入小禁区。</li>
+  </ul>
+
+  <h3>球归谁</h3>
+  <ul>
+    <li>某一格周围 8 格中哪一方的棋子更多，这一格就归哪一方。数量相同时为中立格。</li>
+    <li>守门员在本方大禁区内有“手臂”：紧挨他左右两侧的格子。球在手臂格上时总是归他。任何球员都不能走进手臂格。</li>
+  </ul>
+
+  <h3>移动球</h3>
+  <ul>
+    <li>球沿直线向 8 个方向中的任意一个移动，最多 4 格。传球者自己所在的格子不计入这 4 格。</li>
+    <li>球可以越过球员，包括传球者本人。但不能越过本方大禁区内的守门员及其手臂格，也不能越过本方小禁区内的防守棋子。传球的守门员不会挡住自己的传球。</li>
+    <li>每次移动球，要么是传球，要么是最后一次移动。传球必须落在归你方的格子上，然后你再次移动球。不能传到只属于刚传球的那名球员的格子上。</li>
+    <li>最后一次移动要把球留在不归你方的格子上（中立格，或旁边没有棋子），并且在本方大禁区之外。之后你的回合结束。</li>
+    <li>第 4 次移动球必须是最后一次。不必用满 4 次。</li>
+    <li>球不能送到本方的角格，除非角格旁边有棋子。</li>
+  </ul>
+
+  <h3>进球和奖励回合</h3>
+  <ul>
+    <li>球斜向或笔直向前进入对方球门即为进球（沿球门线横向移动不算）。</li>
+    <li>进球后所有棋子回到起始格，由失球的一方开球。</li>
+    <li>如果你的回合结束时球停在对方底线的黄色圆点上，你可以再走一个回合。</li>
+  </ul>
+
+  <h3>球无处可走</h3>
+  <p>如果一方必须移动球，却没有任何允许的格子可以把球送过去，比赛立即结束。领先的一方获胜；比分相同则为平局。</p>
+  </div>
 </dialog>
 <script type="module" src="src/main.js"></script>
 </body>

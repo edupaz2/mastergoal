@@ -5,16 +5,16 @@ function fromSquare(piece, before) {
   return piece.kind === 'G' ? before.gk[piece.team] : before.players[piece.team][piece.index];
 }
 
-export function describeAction(a, before) {
-  if (a.kind === 'ball') return `ball →${squareName(a.to)}`;
+export function describeAction(a, before, ballWord = 'ball') {
+  if (a.kind === 'ball') return `${ballWord} →${squareName(a.to)}`;
   const from = fromSquare(a.piece, before);
   return `${a.piece.kind} ${squareName(from)}→${squareName(a.to)}`;
 }
 
 // Only the pre-turn state is needed: the counter move comes first and ball
 // moves have no from-square.
-export function describeTurn(team, actions, before) {
-  return [team, ...actions.map((a) => describeAction(a, before))].join(' ');
+export function describeTurn(team, actions, before, ballWord = 'ball') {
+  return [team, ...actions.map((a) => describeAction(a, before, ballWord))].join(' ');
 }
 
 // Items are created with listEl.ownerDocument.createElement('li') when available

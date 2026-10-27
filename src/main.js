@@ -12,6 +12,7 @@ import { chooseTurn } from './ai.js';
 import { describeTurn, createHistory } from './history.js';
 import { sqEq } from './board.js';
 import { initAnalytics, track } from './analytics.js';
+import { pickLanguage, setLanguage, t, teamName, translatePage } from './i18n.js';
 
 const USER = 'W';
 const CPU = 'R';
@@ -19,10 +20,10 @@ const STEP_MS = 3000;          // each computer action stays on screen this long
 const MIN_THINK_MS = 400;      // the "thinking" state stays visible at least this long
 const FALLBACK_TIME_MS = 1500; // main-thread search budget when the worker is unusable
 const WORKER_TIMEOUT_MS = 12000;
-const NAMES = { W: 'White', R: 'Red' };
-const LEVEL_NAMES = { beginner: 'Beginner', medium: 'Medium', master: 'Master' };
 
 const $ = (id) => document.getElementById(id);
+setLanguage(pickLanguage(navigator.languages ?? [navigator.language]));
+translatePage(document);
 const levelSelect = $('level');
 const history = createHistory($('history'));
 const view = createBoardView($('board'), { onSquare });
@@ -152,10 +153,10 @@ function play(a) {
   if (!atBoundary(state)) return false;
 
   const scored = state.score[team] > scoreBefore;
-  let text = describeTurn(team, turnActions, turnBefore);
-  if (scored) text += ' — goal!';
-  else if (state.result && state.result.reason === 'put-out') text += ' — ball put out';
-  else if (state.bonusTurn) text += ' — bonus turn';
+  let text = describeTurn(team, turnActions, turnBefore, t('ball'));
+  if (scored) text += ` — ${t('hGoal')}`;
+  else if (state.result && state.result.reason === 'put-out') text += ` — ${t('hPutOut')}`;
+  else if (state.bonusTurn) text += ` — ${t('hBonus')}`;
   history.add(++turnNo, text);
   turnActions = [];
   turnBefore = null;
@@ -163,9 +164,9 @@ function play(a) {
     // Shown during the pause that follows: the ball in the goal, new score.
     if (team === CPU) goalView = { state: { ...state, players: prev.players, gk: prev.gk, ball: a.to }, lastMove };
     lastMove = []; // counters are back on their start squares
-    note = team === USER ? 'Goal! Red kicks off.' : 'Red scores. Your kick-off.';
+    note = t(team === USER ? 'goalYou' : 'goalCpu');
   } else if (state.bonusTurn) {
-    note = team === USER ? 'Bonus turn: move again.' : 'Red earned a bonus turn.';
+    note = t(team === USER ? 'bonusYou' : 'bonusCpu');
   } else {
     note = '';
   }
@@ -177,12 +178,12 @@ function play(a) {
 function endStuck() {
   const team = state.turn;
   if (turnActions.length) {
-    history.add(++turnNo, describeTurn(team, turnActions, turnBefore) + ' — no legal move');
+    history.add(++turnNo, `${describeTurn(team, turnActions, turnBefore, t('ball'))} — ${t('hNoMove')}`);
     turnActions = [];
     turnBefore = null;
   }
   state = { ...state, result: { winner: leader(state.score), reason: 'put-out' } };
-  endNote = `${NAMES[team]} has no legal move.`;
+  endNote = t('noLegalMove', { team: teamName(team) });
   busy = false;
   thinking = false;
   next();
@@ -296,11 +297,9 @@ function redraw() {
   view.render(shown.state, { selected, targets, lastMove: shown.lastMove, thinking });
   let msg = note;
   if (!state.result) {
-    if (busy && !thinking && !goalView) msg = 'Red is moving...';
+    if (busy && !thinking && !goalView) msg = t('cpuMoving');
     else if (!busy && state.turn === USER) {
-      const hint = state.phase === 'ball'
-        ? 'Move the ball: tap a highlighted square.'
-        : 'Your turn: tap one of your counters.';
+      const hint = t(state.phase === 'ball' ? 'hintBall' : 'hintCounter');
       msg = note ? `${note} ${hint}` : hint;
     }
   }
@@ -309,10 +308,10 @@ function redraw() {
 
 function showBanner() {
   const r = state.result;
-  const title = r.winner === USER ? 'You win!' : r.winner === CPU ? 'You lose' : 'Draw';
+  const title = t(r.winner === USER ? 'youWin' : r.winner === CPU ? 'youLose' : 'draw');
   track(r.winner === USER ? 'game-won' : r.winner === CPU ? 'game-lost' : 'game-drawn');
   const score = `${state.score.W}:${state.score.R}`;
-  const reason = r.reason === 'goals' ? `Final score ${score}.` : `Ball put out at ${score}.`;
+  const reason = t(r.reason === 'goals' ? 'finalScore' : 'putOutAt', { score });
   $('banner-title').textContent = title;
   $('banner-reason').textContent = endNote ? `${endNote} ${reason}` : reason;
   $('banner').hidden = false;
@@ -338,14 +337,14 @@ function newGame() {
   $('banner').hidden = true;
   const first = Math.random() < 0.5 ? USER : CPU;
   state = initialState(first);
-  $('toss').textContent = `Coin toss: ${first === USER ? 'you (White) start' : 'Red (computer) starts'}. Level: ${LEVEL_NAMES[level]}.`;
+  $('toss').textContent = t(first === USER ? 'tossYou' : 'tossCpu', { level: t(level) });
   $('level-note').textContent = '';
   next();
 }
 
 levelSelect.addEventListener('change', () => {
   track(`level-${levelSelect.value}`);
-  $('level-note').textContent = levelSelect.value === level ? '' : 'The new level starts with the next New game.';
+  $('level-note').textContent = levelSelect.value === level ? '' : t('levelNote');
 });
 // Only the buttons count as new-game; the first game starts on page load.
 const onNewGame = () => {

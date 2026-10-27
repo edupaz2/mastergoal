@@ -1,6 +1,7 @@
 // Board view: SVG drawn from code (no external images). White at the bottom, attacking up.
 import { WIDTH, squareName } from './board.js';
 import { armSquares } from './rules.js';
+import { t, teamName } from './i18n.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const C = 40;            // cell size in viewBox units
@@ -127,7 +128,7 @@ function counter(parent, x, y, team, mark, selected) {
 
 export function createBoardView(root, handlers) {
   root.textContent = '';
-  const svg = el('svg', { viewBox: `0 0 ${VW} ${VH}`, class: 'board-svg', role: 'img', 'aria-label': 'Mastergoal board' }, root);
+  const svg = el('svg', { viewBox: `0 0 ${VW} ${VH}`, class: 'board-svg', role: 'img', 'aria-label': t('board') }, root);
   const { hl, pieces } = buildStatic(svg, (sq) => handlers.onSquare(sq));
 
   function render(state, opts = {}) {
@@ -177,15 +178,14 @@ export function createBoardView(root, handlers) {
     const set = (id, txt) => { const n = document.getElementById(id); if (n) n.textContent = txt; };
     set('score-w', state.score.W);
     set('score-r', state.score.R);
-    const name = (t) => (t === 'W' ? 'White' : 'Red');
     if (state.result) {
-      set('turn', 'Game over');
+      set('turn', t('gameOver'));
       set('moves-left', '');
-      set('status', state.result.winner ? `${name(state.result.winner)} wins` : 'Draw');
+      set('status', state.result.winner ? t('wins', { team: teamName(state.result.winner) }) : t('draw'));
     } else {
-      set('turn', `${name(state.turn)} to move`);
-      set('moves-left', state.phase === 'ball' ? `Ball moves left: ${Math.max(0, 4 - state.ballMovesUsed)}` : 'Move a counter');
-      set('status', thinking ? 'Thinking...' : '');
+      set('turn', t('toMove', { team: teamName(state.turn) }));
+      set('moves-left', state.phase === 'ball' ? t('ballMovesLeft', { n: Math.max(0, 4 - state.ballMovesUsed) }) : t('moveCounter'));
+      set('status', thinking ? t('thinking') : '');
     }
   }
   return { render };
