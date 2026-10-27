@@ -236,7 +236,7 @@ test('Fig. 9: goal scored diagonally in 4 moves', () => {
   s = ball(s, 3, 7);
   assert.equal(s.score.W, 1);
   assert.equal(s.score.R, 0);
-  assert.equal(s.turn, 'W');
+  assert.equal(s.turn, 'R');
   assert.equal(s.phase, 'counter');
   assert.equal(s.ballMovesUsed, 0);
   assert.equal(s.result, null);
@@ -259,7 +259,7 @@ test('Fig. 10: goal scored from a forward move in 3 moves', () => {
   s = ball(s, 6, 3);
   s = ball(s, 6, 7);
   assert.equal(s.score.W, 1);
-  assert.equal(s.turn, 'W');
+  assert.equal(s.turn, 'R');
   assert.equal(s.phase, 'counter');
   assertInitialCounters(s);
 });
@@ -280,7 +280,7 @@ test('at 1:1 the match goes on', () => {
   assert.deepEqual(s.score, { W: 1, R: 1 });
   assert.equal(s.result, null);
   assert.equal(isOver(s), false);
-  assert.equal(s.turn, 'W', 'the scorer kicks off');
+  assert.equal(s.turn, 'R', 'the team that conceded kicks off');
   assertInitialCounters(s);
 });
 
@@ -297,7 +297,7 @@ test('Red scores toward y = -7', () => {
   const s0 = board([[5, -4, 'o'], [4, -3, 'R']], { phase: 'ball', turn: 'R' });
   const s = ball(s0, 5, -7);
   assert.equal(s.score.R, 1);
-  assert.equal(s.turn, 'R');
+  assert.equal(s.turn, 'W', 'White conceded, White kicks off');
 });
 
 // --- Put out ---

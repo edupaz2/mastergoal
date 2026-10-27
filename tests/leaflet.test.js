@@ -340,7 +340,7 @@ test('Spec (binding): a neutral yellow end-line square still gives the extra tur
 
 // --- THE GOAL (Figs. 9 and 10) ---
 
-test('Fig. 9: goal diagonally (4 moves); the scorer moves next from the start squares', () => {
+test('Fig. 9: goal diagonally (4 moves); Red (conceded) moves next from the start squares', () => {
   let s = board([
     [7, -1, 'o'],
     [4, 6, 'g'], [4, 4, 'R'], [2, 0, 'R'], [4, -2, 'R'], [7, -4, 'R'],
@@ -352,7 +352,7 @@ test('Fig. 9: goal diagonally (4 moves); the scorer moves next from the start sq
   s = ball(s, 0, 4);
   s = ball(s, 3, 7);
   assert.equal(s.score.W, 1);
-  assert.equal(s.turn, 'W');
+  assert.equal(s.turn, 'R'); // ruling (user): the team that conceded kicks off
   assert.deepEqual(s.players, initialState('W').players);
 });
 
