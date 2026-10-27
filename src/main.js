@@ -353,6 +353,7 @@ const onNewGame = () => {
   newGame();
 };
 $('new-game').addEventListener('click', onNewGame);
+$('rules-open').addEventListener('click', () => $('rules').showModal());
 $('banner-new').addEventListener('click', onNewGame);
 
 initAnalytics();
