@@ -53,6 +53,9 @@ test('index.html: one rules block per language, only English shown before script
   const blocks = [...html.matchAll(/<div class="rules-body" data-lang="(\w+)"[^>]*>/g)];
   assert.deepEqual(blocks.map((m) => m[1]).sort(), [...LANGUAGES].sort());
   for (const m of blocks) assert.equal(m[0].includes(' hidden'), m[1] !== 'en', m[1]);
+  // The language selector offers exactly the supported languages.
+  const select = html.slice(html.indexOf('<select id="language">'), html.indexOf('</select>', html.indexOf('<select id="language">')));
+  assert.deepEqual([...select.matchAll(/value="(\w+)"/g)].map((m) => m[1]), LANGUAGES);
   // Every data-i18n key on the page exists.
   for (const m of html.matchAll(/data-i18n(?:-label)?="(\w+)"/g)) assert.ok(m[1] in _STRINGS.en, m[1]);
 });

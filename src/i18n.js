@@ -7,7 +7,7 @@ export const LANGUAGES = ['en', 'es', 'pt', 'fr', 'it', 'zh'];
 
 const STRINGS = {
   en: {
-    level: 'Level', beginner: 'Beginner', medium: 'Medium', master: 'Master',
+    language: 'Language', level: 'Level', beginner: 'Beginner', medium: 'Medium', master: 'Master',
     newGame: 'New game', rules: 'Rules', moves: 'Moves', white: 'White', red: 'Red',
     close: 'Close', closeRules: 'Close rules', board: 'Mastergoal board',
     gameOver: 'Game over', wins: '{team} wins', draw: 'Draw', toMove: '{team} to move',
@@ -23,7 +23,7 @@ const STRINGS = {
     hGoal: 'goal!', hPutOut: 'ball put out', hBonus: 'bonus turn', hNoMove: 'no legal move', ball: 'ball',
   },
   es: {
-    level: 'Nivel', beginner: 'Principiante', medium: 'Medio', master: 'Maestro',
+    language: 'Idioma', level: 'Nivel', beginner: 'Principiante', medium: 'Medio', master: 'Maestro',
     newGame: 'Nueva partida', rules: 'Reglas', moves: 'Jugadas', white: 'Blanco', red: 'Rojo',
     close: 'Cerrar', closeRules: 'Cerrar reglas', board: 'Tablero de Mastergoal',
     gameOver: 'Fin de la partida', wins: 'Gana {team}', draw: 'Empate', toMove: 'Mueve {team}',
@@ -39,7 +39,7 @@ const STRINGS = {
     hGoal: '¡gol!', hPutOut: 'balón fuera', hBonus: 'turno extra', hNoMove: 'sin jugadas legales', ball: 'balón',
   },
   pt: {
-    level: 'Nível', beginner: 'Iniciante', medium: 'Médio', master: 'Mestre',
+    language: 'Idioma', level: 'Nível', beginner: 'Iniciante', medium: 'Médio', master: 'Mestre',
     newGame: 'Novo jogo', rules: 'Regras', moves: 'Jogadas', white: 'Branco', red: 'Vermelho',
     close: 'Fechar', closeRules: 'Fechar regras', board: 'Tabuleiro de Mastergoal',
     gameOver: 'Fim de jogo', wins: '{team} vence', draw: 'Empate', toMove: 'Vez do {team}',
@@ -55,7 +55,7 @@ const STRINGS = {
     hGoal: 'gol!', hPutOut: 'bola fora', hBonus: 'turno extra', hNoMove: 'sem jogada válida', ball: 'bola',
   },
   fr: {
-    level: 'Niveau', beginner: 'Débutant', medium: 'Moyen', master: 'Maître',
+    language: 'Langue', level: 'Niveau', beginner: 'Débutant', medium: 'Moyen', master: 'Maître',
     newGame: 'Nouvelle partie', rules: 'Règles', moves: 'Coups', white: 'Blanc', red: 'Rouge',
     close: 'Fermer', closeRules: 'Fermer les règles', board: 'Plateau de Mastergoal',
     gameOver: 'Partie terminée', wins: '{team} gagne', draw: 'Match nul', toMove: '{team} joue',
@@ -71,7 +71,7 @@ const STRINGS = {
     hGoal: 'but !', hPutOut: 'ballon sorti', hBonus: 'tour bonus', hNoMove: 'aucun coup légal', ball: 'ballon',
   },
   it: {
-    level: 'Livello', beginner: 'Principiante', medium: 'Medio', master: 'Maestro',
+    language: 'Lingua', level: 'Livello', beginner: 'Principiante', medium: 'Medio', master: 'Maestro',
     newGame: 'Nuova partita', rules: 'Regole', moves: 'Mosse', white: 'Bianco', red: 'Rosso',
     close: 'Chiudi', closeRules: 'Chiudi le regole', board: 'Tabellone di Mastergoal',
     gameOver: 'Partita finita', wins: '{team} vince', draw: 'Pareggio', toMove: 'Muove {team}',
@@ -87,7 +87,7 @@ const STRINGS = {
     hGoal: 'gol!', hPutOut: 'palla fuori', hBonus: 'turno bonus', hNoMove: 'nessuna mossa valida', ball: 'palla',
   },
   zh: {
-    level: '难度', beginner: '初级', medium: '中级', master: '大师',
+    language: '语言', level: '难度', beginner: '初级', medium: '中级', master: '大师',
     newGame: '新游戏', rules: '规则', moves: '走法记录', white: '白方', red: '红方',
     close: '关闭', closeRules: '关闭规则', board: 'Mastergoal 棋盘',
     gameOver: '游戏结束', wins: '{team}获胜', draw: '平局', toMove: '轮到{team}',
