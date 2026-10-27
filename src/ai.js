@@ -2,8 +2,8 @@
 //
 // A "turn" here is the action list from a turn boundary (counter phase) to the next
 // boundary: one counter move, then any ball moves, ending when the phase is back to
-// 'counter' or the game is over. A goal (the scorer moves next) or a bonus square
-// (bonusTurn) leaves `turn` unchanged; chooseTurn still returns at that boundary, so a
+// 'counter' or the game is over. After a goal the team that conceded moves next. A bonus
+// square (bonusTurn) leaves `turn` unchanged; chooseTurn still returns at that boundary, so a
 // caller must call chooseTurn again while `s.turn` is still the computer's team. Inside
 // the search such a same-team continuation is a child searched from the same side.
 //
@@ -209,13 +209,15 @@ function makeSearch({ deadline, maxNodes, me }) {
   // Value of child `t` of node `s` (searched to `depth` more turns), from the side of
   // `s`'s mover. A turn that scores or wins earns EARLY per remaining ply, so a goal now
   // beats the same goal later (otherwise the search can postpone it forever). The
-  // window is shifted by that bonus.
+  // window is shifted by that bonus. A goal is a leaf: every goal restarts from the same
+  // kick-off, and searching the conceder's reply after one goal but not after a later
+  // one (the horizon) would make the search postpone it.
   function childValue(t, s, depth, alpha, beta) {
     const team = s.turn;
     const n = t.state;
     const gain = n.score[team] !== s.score[team] || (n.result && n.result.winner === team);
     const b = gain ? EARLY * (depth + 1) : 0;
-    if (n.result || depth === 0) return value(n, team, me) + b;
+    if (n.result || depth === 0 || gain) return value(n, team, me) + b;
     t.key ??= stateKey(n);
     if (n.turn === team) return search(n, t.key, depth, alpha - b, beta - b) + b;
     return b - search(n, t.key, depth, b - beta, b - alpha);

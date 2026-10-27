@@ -163,7 +163,7 @@ function play(a) {
     // Shown during the pause that follows: the ball in the goal, new score.
     if (team === CPU) goalView = { state: { ...state, players: prev.players, gk: prev.gk, ball: a.to }, lastMove };
     lastMove = []; // counters are back on their start squares
-    note = team === USER ? 'Goal! You kick off again.' : 'Red scores and kicks off again.';
+    note = team === USER ? 'Goal! Red kicks off.' : 'Red scores. Your kick-off.';
   } else if (state.bonusTurn) {
     note = team === USER ? 'Bonus turn: move again.' : 'Red earned a bonus turn.';
   } else {
@@ -239,14 +239,15 @@ async function computerTurn() {
     play(actions[i]);
     redraw();
     if (state.result) break;
-    // No wait once the turn is the user's: the last move stays highlighted.
-    if (state.turn === USER) break;
+    // No wait once the turn is the user's (the last move stays highlighted), except to
+    // keep Red's goal on screen before the user kicks off.
+    if (state.turn === USER && !goalView) break;
     await delay(STEP_MS);
     if (id !== gameId) return;
     goalView = null;
   }
   busy = false;
-  next(); // asks again while it is still Red's turn (after a goal or a bonus square)
+  next(); // asks again while it is still Red's turn (after a bonus square)
 }
 
 function onSquare(sq) {

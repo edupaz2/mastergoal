@@ -345,7 +345,8 @@ export function stepAction(s, a) {
   n.ball = { x: a.to.x, y: a.to.y };
   if (goalDefender(n.ball) === otherTeam(team)) {
     const score = { ...n.score, [team]: n.score[team] + 1 };
-    const r = initialState(team);
+    // Ruling (user): the team that conceded kicks off from the middle.
+    const r = initialState(otherTeam(team));
     r.score = score;
     // Ruling (user): best of 3, the first side to 2 goals wins.
     if (score[team] >= 2) r.result = { winner: team, reason: 'goals' };
