@@ -39,11 +39,6 @@ function destinations(s, from, team, isGk) {
       if (isGk ? isArm(s, opp, to) : onArm(s, to)) continue;
       // GK text: "... or vice versa": his arms may not be put onto a counter.
       if (isGk && armsAt(to, team).some((a) => !sqEq(a, from) && counterAt(s, a))) continue;
-      // Spec line 75 (binding): no Player, nor a GK outside his area, enters a small area.
-      // The GK may leave his area (leaflet: "same characteristics ... out of his area").
-      // Only a GK already inside his own area may enter his OWN small area.
-      const ownSmallOk = isGk && inLargeArea(from, team) && inSmallArea(to, team);
-      if (!ownSmallOk && (inSmallArea(to, 'W') || inSmallArea(to, 'R'))) continue;
       out.push(to);
     }
   }
@@ -154,8 +149,8 @@ function soleOwner(s, at, team) {
 // Per-call lookup tables for legalBallMoves (counters do not move during it), indexed
 // by pitch square: occupancy (counterAt), each team's adjacent-counter counts with
 // arm-square counters skipped (adjacentCounts), the arm owner (armOwner) and the squares
-// the ball may not cross (a GK inside his large area, his arm squares, and occupied
-// small-area squares). Same values as those helpers, so the destination loop is O(1)
+// the ball may not cross (a GK inside his large area, his arm squares, and defenders
+// in their own small area). Same values as those helpers, so the destination loop is O(1)
 // per square.
 const sqIndex = (x, y) => (y + 6) * 11 + x;
 const inPitchXY = (x, y) => x >= 0 && x < 11 && y >= -6 && y <= 6;
@@ -211,7 +206,7 @@ function ballGrid(s) {
       if (!inPitchXY(q.x, q.y)) continue; // parked off-pitch: no pitch neighbours either
       const i = sqIndex(q.x, q.y);
       occ[i] = 1;
-      if (inSmallArea(q, 'W') || inSmallArea(q, 'R')) block[i] = 1;
+      if (inSmallArea(q, t)) block[i] = 1; // a defender in his own small area
       if (arm[i]) continue;
       for (const [dx, dy] of DIRS) {
         const x = q.x + dx;
@@ -255,10 +250,9 @@ export function legalBallMoves(s) {
       const x = bx + dx * d;
       const y = by + dy * d;
       // The ball never crosses a GK inside his large area or his arm squares (gkBlocks),
-      // unless that GK is the one passing.
-      // Ball text: it never jumps "over the Players that are in the small area";
-      // defensive: with the small-area ban only a GK can stand there.
-      if (d > 1 && block[sqIndex(x - dx, y - dy)] && !(gkPasses && passerSquare(s, team, x - dx, y - dy))) break;
+      // nor (ruling, user) a defender in his own small area; the passer never blocks.
+      const passerBehind = (d === 2 && overPasser) || (gkPasses && passerSquare(s, team, x - dx, y - dy));
+      if (d > 1 && block[sqIndex(x - dx, y - dy)] && !passerBehind) break;
       if (!inPitchXY(x, y)) {
         // Only the opponent's goal, entered diagonally or straight forward.
         if (goalDefender({ x, y }) === opp && (dx !== 0 || dy === forward)) out.push({ kind: 'ball', to: { x, y } });

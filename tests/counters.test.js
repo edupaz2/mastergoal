@@ -35,12 +35,20 @@ test('no occupied squares, no jumping over a counter', () => {
   assert.ok(has(s, 7, 0));
 });
 
-test('no player enters a small area', () => {
+test('players may enter either small area', () => {
   const s = stateFromAscii(put(emptyRows(), 5, -3, 'W'));
-  assert.ok(!has(s, 5, -5));
-  assert.ok(!has(s, 5, -6));
-  assert.ok(!has(s, 4, -5));
+  assert.ok(has(s, 5, -5));
   assert.ok(has(s, 5, -4));
+  const r = stateFromAscii(put(emptyRows(), 5, 3, 'W'));
+  assert.ok(has(r, 5, 5));
+});
+
+test('a Goal-keeper cannot enter his own corners, but may enter the opponent\'s', () => {
+  assert.ok(!has(stateFromAscii(put(emptyRows(), 1, -5, 'G')), 0, -6));
+  assert.ok(!has(stateFromAscii(put(emptyRows(), 9, 5, 'g'), { turn: 'R' }), 10, 6));
+  // Outside his area he moves like a Player, up to the opponent's corner.
+  assert.ok(has(stateFromAscii(put(emptyRows(), 0, 4, 'G')), 0, 6));
+  assert.ok(has(stateFromAscii(put(emptyRows(), 10, -4, 'g'), { turn: 'R' }), 10, -6));
 });
 
 test('own corners prohibited, opposite corners fine, mirror for Red', () => {
