@@ -66,13 +66,13 @@ test('Fig. 2 / Ball text: only the Ball jumps over Players; a Player cannot', ()
   assert.ok(!counterTargets(s, { x: 5, y: 1 }).includes('5,3'));
 });
 
-test('Spec (binding): no Player, nor a GK outside his area, enters either small area', () => {
-  // Spec line 75 (user-confirmed) bans it; the leaflet's Ball text suggests otherwise.
-  assert.ok(!counterTargets(board([[5, -3, 'W']]), { x: 5, y: -3 }).includes('5,-5'));
-  assert.ok(!counterTargets(board([[5, 3, 'W']]), { x: 5, y: 3 }).includes('5,5'));
-  assert.ok(!counterTargets(board([[5, 3, 'G']]), { x: 5, y: 3 }).includes('5,5'));
-  // A GK outside his own area (x 0) cannot step into his own small area either.
-  assert.ok(!counterTargets(board([[0, -5, 'G']]), { x: 0, y: -5 }).includes('2,-5'));
+test('Ruling (user): Players and Goal-keepers may enter either small area', () => {
+  // The leaflet's Ball text speaks of "the Players that are in the small area".
+  assert.ok(counterTargets(board([[5, -3, 'W']]), { x: 5, y: -3 }).includes('5,-5'));
+  assert.ok(counterTargets(board([[5, 3, 'W']]), { x: 5, y: 3 }).includes('5,5'));
+  assert.ok(counterTargets(board([[5, 3, 'G']]), { x: 5, y: 3 }).includes('5,5'));
+  // A GK outside his own area (x 0) moves like a Player, into his small area too.
+  assert.ok(counterTargets(board([[0, -5, 'G']]), { x: 0, y: -5 }).includes('2,-5'));
 });
 
 test('Goal-keeper: same characteristics as a field Player out of his area; he may leave it', () => {
@@ -157,15 +157,22 @@ test('Ball text: the ball jumps over Players outside the small area', () => {
   assert.ok(t.includes('9,0'));
 });
 
-test('Ball text: the ball never jumps over Players in the small area', () => {
+test('Ruling (user): the ball never jumps over defenders in their small area', () => {
+  // Red defender (5,5) in Red's small area blocks White's shot.
   const s = board([[5, 3, 'o'], [4, 2, 'W'], [5, 5, 'R']], { phase: 'ball' });
   assert.ok(!ballTargets(s).includes('5,7'));
   // Control: a Player just outside the small area (5,4) is jumped.
   const c = board([[5, 2, 'o'], [4, 1, 'W'], [5, 4, 'R']], { phase: 'ball' });
   assert.ok(ballTargets(c).includes('5,6'));
-  // Own Players in the small area block the ball too.
+  // An attacker in the opponent's small area is jumped.
   const o = board([[5, 3, 'o'], [4, 2, 'W'], [5, 6, 'W']], { phase: 'ball' });
-  assert.ok(!ballTargets(o).includes('5,7'));
+  assert.ok(ballTargets(o).includes('5,7'));
+});
+
+test('Ruling (user): a defender passing from his small area may pass over himself', () => {
+  // White (5,-5) holds the ball (5,-6): up over him to (5,-2), outside White's area.
+  const s = board([[5, -6, 'o'], [5, -5, 'W']], { phase: 'ball' });
+  assert.ok(ballTargets(s).includes('5,-2'));
 });
 
 test('Fig. 5: a ball on a side square belongs to the Goal-keeper, whatever else', () => {

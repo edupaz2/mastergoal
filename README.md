@@ -26,8 +26,7 @@ Node 20+ is needed for development only; the game itself runs in the browser.
 
 ## Rules interpretation notes
 
-In three places the engine follows the design spec (`docs/superpowers/specs/2026-10-23-mastergoal-design.md`) over a literal reading of the leaflet:
+In two places the engine follows the design spec (`docs/superpowers/specs/2026-10-23-mastergoal-design.md`) over a literal reading of the leaflet:
 
-- Players may not enter the small areas.
 - A ball ending on an opponent end-line yellow square always gives a bonus turn.
 - The self-pass rule counts every own counter next to the ball as the taker.
