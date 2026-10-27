@@ -12,7 +12,7 @@ import { chooseTurn } from './ai.js';
 import { describeTurn, createHistory } from './history.js';
 import { sqEq } from './board.js';
 import { initAnalytics, track } from './analytics.js';
-import { pickLanguage, setLanguage, t, teamName, translatePage } from './i18n.js';
+import { language, pickLanguage, setLanguage, t, teamName, translatePage } from './i18n.js';
 
 const USER = 'W';
 const CPU = 'R';
@@ -22,9 +22,16 @@ const FALLBACK_TIME_MS = 1500; // main-thread search budget when the worker is u
 const WORKER_TIMEOUT_MS = 12000;
 
 const $ = (id) => document.getElementById(id);
-setLanguage(pickLanguage(navigator.languages ?? [navigator.language]));
+const LANG_KEY = 'mastergoal-language';
+// A language picked in the selector wins over the browser's languages.
+function savedLanguage() {
+  try { return localStorage.getItem(LANG_KEY); } catch { return null; }
+}
+setLanguage(savedLanguage() ?? pickLanguage(navigator.languages ?? [navigator.language]));
 translatePage(document);
 const levelSelect = $('level');
+const languageSelect = $('language');
+languageSelect.value = language();
 const history = createHistory($('history'));
 const view = createBoardView($('board'), { onSquare });
 
@@ -38,8 +45,9 @@ let lastMove = [];      // actions of the latest turn, each with a `from` square
 let turnBefore = null;  // state at the start of the turn in progress
 let turnActions = [];
 let turnNo = 0;
-let note = '';          // controller message under the status line
-let endNote = '';
+let note = '';          // string key of the controller message under the status line
+let endTeam = null;     // the side left with no legal move, if that ended the game
+let first = null;       // the coin-toss winner
 let goalView = null;    // the computer's goal kept on screen, before the kick-off reset
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -164,9 +172,9 @@ function play(a) {
     // Shown during the pause that follows: the ball in the goal, new score.
     if (team === CPU) goalView = { state: { ...state, players: prev.players, gk: prev.gk, ball: a.to }, lastMove };
     lastMove = []; // counters are back on their start squares
-    note = t(team === USER ? 'goalYou' : 'goalCpu');
+    note = team === USER ? 'goalYou' : 'goalCpu';
   } else if (state.bonusTurn) {
-    note = t(team === USER ? 'bonusYou' : 'bonusCpu');
+    note = team === USER ? 'bonusYou' : 'bonusCpu';
   } else {
     note = '';
   }
@@ -183,7 +191,7 @@ function endStuck() {
     turnBefore = null;
   }
   state = { ...state, result: { winner: leader(state.score), reason: 'put-out' } };
-  endNote = t('noLegalMove', { team: teamName(team) });
+  endTeam = team;
   busy = false;
   thinking = false;
   next();
@@ -295,12 +303,12 @@ function redraw() {
   }
   const shown = goalView ?? { state, lastMove };
   view.render(shown.state, { selected, targets, lastMove: shown.lastMove, thinking });
-  let msg = note;
+  let msg = note && t(note);
   if (!state.result) {
     if (busy && !thinking && !goalView) msg = t('cpuMoving');
     else if (!busy && state.turn === USER) {
       const hint = t(state.phase === 'ball' ? 'hintBall' : 'hintCounter');
-      msg = note ? `${note} ${hint}` : hint;
+      msg = note ? `${t(note)} ${hint}` : hint;
     }
   }
   $('message').textContent = msg;
@@ -308,14 +316,37 @@ function redraw() {
 
 function showBanner() {
   const r = state.result;
-  const title = t(r.winner === USER ? 'youWin' : r.winner === CPU ? 'youLose' : 'draw');
   track(r.winner === USER ? 'game-won' : r.winner === CPU ? 'game-lost' : 'game-drawn');
-  const score = `${state.score.W}:${state.score.R}`;
-  const reason = t(r.reason === 'goals' ? 'finalScore' : 'putOutAt', { score });
-  $('banner-title').textContent = title;
-  $('banner-reason').textContent = endNote ? `${endNote} ${reason}` : reason;
+  bannerText();
   $('banner').hidden = false;
   $('message').textContent = '';
+}
+
+function bannerText() {
+  const r = state.result;
+  const score = `${state.score.W}:${state.score.R}`;
+  const reason = t(r.reason === 'goals' ? 'finalScore' : 'putOutAt', { score });
+  $('banner-title').textContent = t(r.winner === USER ? 'youWin' : r.winner === CPU ? 'youLose' : 'draw');
+  $('banner-reason').textContent = endTeam ? `${t('noLegalMove', { team: teamName(endTeam) })} ${reason}` : reason;
+}
+
+function tossText() {
+  $('toss').textContent = t(first === USER ? 'tossYou' : 'tossCpu', { level: t(level) });
+}
+
+// Moves already in the history keep the language they were written in.
+function onLanguage() {
+  setLanguage(languageSelect.value);
+  try { localStorage.setItem(LANG_KEY, language()); } catch { /* not saved: still applies now */ }
+  translatePage(document);
+  $('board').querySelector('svg')?.setAttribute('aria-label', t('board'));
+  tossText();
+  $('level-note').textContent = levelSelect.value === level ? '' : t('levelNote');
+  redraw();
+  if (state.result) {
+    $('message').textContent = '';
+    bannerText();
+  }
 }
 
 function newGame() {
@@ -331,13 +362,13 @@ function newGame() {
   turnActions = [];
   turnNo = 0;
   note = '';
-  endNote = '';
+  endTeam = null;
   goalView = null;
   history.clear();
   $('banner').hidden = true;
-  const first = Math.random() < 0.5 ? USER : CPU;
+  first = Math.random() < 0.5 ? USER : CPU;
   state = initialState(first);
-  $('toss').textContent = t(first === USER ? 'tossYou' : 'tossCpu', { level: t(level) });
+  tossText();
   $('level-note').textContent = '';
   next();
 }
@@ -353,6 +384,7 @@ const onNewGame = () => {
 };
 $('new-game').addEventListener('click', onNewGame);
 $('rules-open').addEventListener('click', () => $('rules').showModal());
+languageSelect.addEventListener('change', onLanguage);
 $('banner-new').addEventListener('click', onNewGame);
 
 initAnalytics();
