@@ -36,12 +36,62 @@
         <option value="master">Master</option>
       </select>
       <button id="new-game" type="button">New game</button>
+      <button id="rules-open" type="button" class="secondary">Rules</button>
     </div>
     <p id="level-note" class="level-note"></p>
     <h2>Moves</h2>
     <ol id="history"></ol>
   </aside>
 </main>
+<dialog id="rules" class="rules" aria-labelledby="rules-title">
+  <form method="dialog" class="rules-close"><button type="submit" aria-label="Close rules">Close</button></form>
+  <h2 id="rules-title">How to play</h2>
+  <p>You play White and the computer plays Red. Each team has 4 Players and 1 Goal-keeper (G). They share one Ball. A coin toss decides who starts.</p>
+
+  <h3>Winning</h3>
+  <p>Best of 3: the first team to score 2 goals wins (2-0, 2-1, 1-2 or 0-2). You attack Red's goal at the top; Red attacks yours at the bottom.</p>
+
+  <h3>Your turn</h3>
+  <ol>
+    <li>Move one counter: a Player or your Goal-keeper.</li>
+    <li>If that counter now stands next to the Ball and the Ball is yours (see below), you <b>must</b> move the Ball, up to 4 times.</li>
+    <li>Otherwise your turn ends.</li>
+  </ol>
+
+  <h3>Moving counters</h3>
+  <ul>
+    <li>A Player moves 1 or 2 squares in a straight line, in any of the 8 directions. He can't jump over other counters or land on an occupied square.</li>
+    <li>Inside his own large area, the Goal-keeper moves 1 square at a time. Outside it he moves like a Player.</li>
+    <li>A team may never step onto its own two corner squares. The other team may.</li>
+    <li>Players may enter the small areas.</li>
+  </ul>
+
+  <h3>Who owns the Ball</h3>
+  <ul>
+    <li>A square belongs to a team when that team has more counters on the 8 squares around it. With equal numbers it is neutral.</li>
+    <li>Inside his own large area the Goal-keeper has "arms": the squares just left and right of him. A Ball on an arm square always belongs to him. No Player may step onto the arm squares.</li>
+  </ul>
+
+  <h3>Moving the Ball</h3>
+  <ul>
+    <li>The Ball moves in a straight line, in any of the 8 directions, up to 4 squares. The passer's own square doesn't count toward the 4.</li>
+    <li>It may fly over Players, including the passer. It can't fly over a Goal-keeper inside his large area, over his arm squares, or over a defender inside his own small area. The passing Goal-keeper never blocks his own pass.</li>
+    <li>Each Ball move is either a pass or the last move. A pass lands on a square that belongs to your team, and then you move the Ball again. You can't pass to a square that belongs only to the Player who just passed it.</li>
+    <li>The last move leaves the Ball on a square that doesn't belong to your team (neutral, or next to no one) and outside your own large area. Then your turn ends.</li>
+    <li>The 4th Ball move must be the last one. You don't have to use all 4.</li>
+    <li>The Ball may not be sent to your own corner squares, unless a counter is next to them.</li>
+  </ul>
+
+  <h3>Goals and bonus turns</h3>
+  <ul>
+    <li>A goal is scored when the Ball enters the other team's goal, moving diagonally or straight forward (not sideways along the goal line).</li>
+    <li>After a goal every counter goes back to its start square, and the team that conceded kicks off.</li>
+    <li>If your turn ends with the Ball on one of the yellow dots on the other team's end line, you get another turn.</li>
+  </ul>
+
+  <h3>Ball put out</h3>
+  <p>If a team must move the Ball but has no allowed square to send it to, the game ends at once. The team ahead wins; a level score is a draw.</p>
+</dialog>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
