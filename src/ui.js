@@ -109,12 +109,22 @@ function buildStatic(svg, onClick) {
   return { hl, pieces };
 }
 
-function counter(parent, x, y, team, label, selected) {
+// Top marks of the original counters, by player index (start squares: (2,1.) plain,
+// (7,1.) dot, (3,3.) horizontal line, (6,3.) plus; Red mirrors White).
+const PLAYER_MARKS = ['plain', 'dot', 'line', 'plus'];
+
+function counter(parent, x, y, team, mark, selected) {
   const g = el('g', { class: 'counter' + (selected ? ' selected' : '') }, parent);
   el('circle', { cx: cx(x) + 1.5, cy: cy(y) + 2.5, r: 15, fill: 'rgba(0,0,0,.35)' }, g);
   el('circle', { class: 'body', cx: cx(x), cy: cy(y), r: 15, fill: `url(#g-${team})`, stroke: team === 'W' ? '#8d887c' : '#4d0605', 'stroke-width': 1 }, g);
   el('ellipse', { cx: cx(x) - 5, cy: cy(y) - 7, rx: 6, ry: 3.5, fill: 'rgba(255,255,255,.55)' }, g);
-  if (label) el('text', { x: cx(x), y: cy(y) + 5, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 'bold', fill: team === 'W' ? '#333' : '#fff', 'font-family': 'Georgia, serif' }, g, label);
+  const [px, py] = [cx(x), cy(y)];
+  const ink = team === 'W' ? 'rgba(60,55,45,.75)' : 'rgba(60,0,0,.8)';
+  const stroke = { stroke: ink, 'stroke-width': 2.2, 'stroke-linecap': 'round' };
+  if (mark === 'G') el('text', { x: px, y: py + 5, 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 'bold', fill: team === 'W' ? '#333' : '#fff', 'font-family': 'Georgia, serif' }, g, 'G');
+  if (mark === 'dot') el('circle', { cx: px, cy: py, r: 2.6, fill: ink }, g);
+  if (mark === 'line' || mark === 'plus') el('line', { x1: px - 8, y1: py, x2: px + 8, y2: py, ...stroke }, g);
+  if (mark === 'plus') el('line', { x1: px, y1: py - 8, x2: px, y2: py + 8, ...stroke }, g);
 }
 
 export function createBoardView(root, handlers) {
@@ -147,7 +157,7 @@ export function createBoardView(root, handlers) {
     }
     const isSel = (team, kind, index) => !!selected && selected.team === team && selected.kind === kind && selected.index === index;
     for (const team of ['W', 'R']) {
-      state.players[team].forEach((p, i) => counter(pieces, p.x, p.y, team, '', isSel(team, 'P', i)));
+      state.players[team].forEach((p, i) => counter(pieces, p.x, p.y, team, PLAYER_MARKS[i], isSel(team, 'P', i)));
       const gk = state.gk[team];
       counter(pieces, gk.x, gk.y, team, 'G', isSel(team, 'G', 0));
     }
