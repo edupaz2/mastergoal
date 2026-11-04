@@ -54,6 +54,7 @@ button.secondary { background: transparent; color: var(--ink); border-color: var
 
 /* Highlights */
 .target { fill: rgba(242, 200, 50, .85); stroke: #6b5200; stroke-width: 1; pointer-events: none; }
+.choice-ring { fill: rgba(242, 200, 50, .25); stroke: #f2c832; stroke-width: 3; stroke-dasharray: 5 3; pointer-events: none; }
 .target-ring { fill: rgba(242, 200, 50, .18); stroke: #f2c832; stroke-width: 2; pointer-events: none; }
 .last-move { fill: rgba(255, 255, 255, .22); stroke: #fff; stroke-width: 2; stroke-dasharray: 5 3; pointer-events: none; }
 .counter.selected .body, .ball.selected .body { stroke: var(--accent); stroke-width: 4; }
