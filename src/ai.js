@@ -50,7 +50,7 @@ export function stateKey(s) {
   }
   c.push(code(s.ball));
   const r = s.result ? `${s.result.winner}${s.result.reason}` : '';
-  return `${String.fromCharCode(...c)}${s.turn}${s.phase[0]}${s.ballMovesUsed}${s.score.W}${s.score.R}${s.bonusTurn ? 1 : 0}${r}`;
+  return `${String.fromCharCode(...c)}${s.turn}${s.phase[0]}${s.ballMovesUsed}${s.taker ? s.taker.kind + s.taker.index : ''}${s.score.W}${s.score.R}${s.bonusTurn ? 1 : 0}${r}`;
 }
 
 const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
@@ -109,7 +109,7 @@ export function forEachTurn(s, fn) {
   };
   // `moves` = legalBallMoves(start), as stepAction already computed them.
   const expandBall = (start, moves, prefix) => {
-    const at = (st) => `${sqKey(st.ball)}|${st.ballMovesUsed}`;
+    const at = (st) => `${sqKey(st.ball)}|${st.ballMovesUsed}|${st.taker ? st.taker.kind + st.taker.index : ''}`;
     const seen = new Set([at(start)]);
     let frontier = [{ st: start, moves, actions: prefix }];
     while (frontier.length) {

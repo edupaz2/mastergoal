@@ -40,6 +40,7 @@ let state = null;
 let level = 'medium';
 let busy = false;       // computer thinking or playing back its moves
 let thinking = false;
+let pendingBall = null; // ball moves to one square that differ only by receiver (user must pick)
 let selected = null;    // PieceRef of the user's selected counter
 let lastMove = [];      // actions of the latest turn, each with a `from` square
 let turnBefore = null;  // state at the start of the turn in progress
@@ -200,6 +201,7 @@ function endStuck() {
 // ---- Flow -----------------------------------------------------------------------------
 function next() {
   selected = null;
+  pendingBall = null;
   if (state.result) {
     busy = false;
     redraw();
@@ -263,8 +265,21 @@ function onSquare(sq) {
   if (busy || !state || state.result || state.turn !== USER) return;
   const legal = legalActions(state);
   if (state.phase === 'ball') {
-    const a = legal.find((m) => sqEq(m.to, sq));
-    if (a) userPlay(a);
+    // Choosing the receiver: tap one of the highlighted players (or another square).
+    if (pendingBall) {
+      const i = pendingBall.findIndex((m) => sqEq(counterSq(m.taker), sq));
+      if (i >= 0) {
+        userPlay(pendingBall[i]);
+        return;
+      }
+      pendingBall = null;
+    }
+    const moves = legal.filter((m) => sqEq(m.to, sq));
+    if (moves.length === 1) userPlay(moves[0]);
+    else if (moves.length > 1) {
+      pendingBall = moves; // one move per possible receiver
+      redraw();
+    } else redraw();
     return;
   }
   if (selected) {
@@ -286,8 +301,11 @@ function pieceAt(sq) {
   return i >= 0 ? { team: USER, kind: 'P', index: i } : null;
 }
 
+const counterSq = (ref) => (ref.kind === 'G' ? state.gk[USER] : state.players[USER][ref.index]);
+
 function userPlay(a) {
   selected = null;
+  pendingBall = null;
   note = '';
   if (play(a)) next();
   else redraw();
@@ -296,18 +314,22 @@ function userPlay(a) {
 // ---- Rendering ------------------------------------------------------------------------
 function redraw() {
   let targets = [];
+  let choices = [];
   if (!busy && !state.result && state.turn === USER) {
     const legal = legalActions(state);
-    if (state.phase === 'ball') targets = legal.map((m) => m.to);
+    if (state.phase === 'ball') {
+      targets = pendingBall ? [pendingBall[0].to] : legal.map((m) => m.to);
+      if (pendingBall) choices = pendingBall.map((m) => counterSq(m.taker));
+    }
     else if (selected) targets = legal.filter((m) => samePiece(m.piece, selected)).map((m) => m.to);
   }
   const shown = goalView ?? { state, lastMove };
-  view.render(shown.state, { selected, targets, lastMove: shown.lastMove, thinking });
+  view.render(shown.state, { selected, targets, choices, lastMove: shown.lastMove, thinking });
   let msg = note && t(note);
   if (!state.result) {
     if (busy && !thinking && !goalView) msg = t('cpuMoving');
     else if (!busy && state.turn === USER) {
-      const hint = t(state.phase === 'ball' ? 'hintBall' : 'hintCounter');
+      const hint = t(state.phase !== 'ball' ? 'hintCounter' : pendingBall ? 'hintReceiver' : 'hintBall');
       msg = note ? `${t(note)} ${hint}` : hint;
     }
   }
@@ -357,6 +379,7 @@ function newGame() {
   busy = false;
   thinking = false;
   selected = null;
+  pendingBall = null;
   lastMove = [];
   turnBefore = null;
   turnActions = [];

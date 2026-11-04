@@ -140,6 +140,23 @@ function holders(s, at, team) {
   return out;
 }
 
+// References ({ kind: 'P', index } / { kind: 'G', index: 0 }) of the own counters that
+// could receive a ball landing on `at`: the GK alone on his arm square, else every
+// adjacent counter off the arm squares.
+function receivers(s, at, team) {
+  if (armOwner(s, at) === team) return [{ kind: 'G', index: 0 }];
+  const out = [];
+  s.players[team].forEach((c, index) => {
+    if (adjacent(c, at) && !onArm(s, c)) out.push({ kind: 'P', index });
+  });
+  const g = s.gk[team];
+  if (adjacent(g, at) && !onArm(s, g)) out.push({ kind: 'G', index: 0 });
+  return out;
+}
+
+const counterOf = (s, team, ref) => (ref.kind === 'G' ? s.gk[team] : s.players[team][ref.index]);
+const sameRef = (a, b) => a.kind === b.kind && a.index === b.index;
+
 // The single own counter owning `at`; call only when ownersExclusive is true.
 function soleOwner(s, at, team) {
   if (armOwner(s, at) === team) return s.gk[team];
@@ -234,8 +251,10 @@ export function legalBallMoves(s) {
   const lastMove = s.ballMovesUsed >= 3;
   const own = cnt[team];
   const other = cnt[opp];
-  // Spec lines 61/89: every own counter next to the ball is a taker.
-  const held = holders(s, s.ball, team);
+  // Spec lines 61/89: every own counter next to the ball is a taker, unless the last
+  // pass named its receiver (s.taker): then he alone is.
+  const held = s.taker ? [counterOf(s, team, s.taker)] : holders(s, s.ball, team);
+  const heldRefs = s.taker ? [s.taker] : receivers(s, s.ball, team);
   // Fig. 6: the ball may be sent "in any direction, including that of the Player
   // himself", so a passing GK and his arm squares never block his own pass.
   const gk = s.gk[team];
@@ -272,6 +291,14 @@ export function legalBallMoves(s) {
         // ownersExclusive(s, to, team): through the arm, or a single adjacent counter.
         const exclusive = arm[i] === armMine || own[i] === 1;
         if (exclusive && held.some((h) => sqEq(h, soleOwner(s, to, team)))) continue;
+        // Landing next to several own counters: the passer chooses the receiver (never
+        // the passer himself unless he is the only one).
+        if (!arm[i] && own[i] >= 2) {
+          const all = receivers(s, to, team);
+          const others = all.filter((r) => !heldRefs.some((h) => sameRef(h, r)));
+          for (const taker of others.length ? others : all) out.push({ kind: 'ball', to, taker });
+          continue;
+        }
       } else if (inLargeArea(to, team)) {
         continue;
       }
@@ -290,9 +317,11 @@ export function isOver(s) {
   return s.result !== null;
 }
 
+const sameTaker = (a, b) => (a && b ? sameRef(a, b) : !a && !b);
+
 const sameAction = (a, b) =>
   a.kind === b.kind && sqEq(a.to, b.to) &&
-  (a.kind === 'ball' ||
+  (a.kind === 'ball' ? sameTaker(a.taker, b.taker) :
     (a.piece.team === b.piece.team && a.piece.kind === b.piece.kind && a.piece.index === b.piece.index));
 
 const leader = (score) => (score.W > score.R ? 'W' : score.R > score.W ? 'R' : null);
@@ -300,6 +329,7 @@ const leader = (score) => (score.W > score.R ? 'W' : score.R > score.W ? 'R' : n
 function endTurn(n, bonus) {
   n.phase = 'counter';
   n.ballMovesUsed = 0;
+  n.taker = null;
   n.bonusTurn = bonus;
   if (!bonus) n.turn = otherTeam(n.turn);
 }
@@ -337,12 +367,14 @@ export function stepAction(s, a) {
     if (ownerOfBall(n) === team) {
       n.phase = 'ball';
       n.ballMovesUsed = 0;
+      n.taker = null;
       return { state: n, ballMoves: checkPutOut(n) };
     }
     endTurn(n, false);
     return { state: n, ballMoves: null };
   }
   n.ball = { x: a.to.x, y: a.to.y };
+  n.taker = a.taker ? { kind: a.taker.kind, index: a.taker.index } : null;
   if (goalDefender(n.ball) === otherTeam(team)) {
     const score = { ...n.score, [team]: n.score[team] + 1 };
     // Ruling (user): the team that conceded kicks off from the middle.

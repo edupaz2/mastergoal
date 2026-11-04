@@ -132,7 +132,7 @@ export function createBoardView(root, handlers) {
   const { hl, pieces } = buildStatic(svg, (sq) => handlers.onSquare(sq));
 
   function render(state, opts = {}) {
-    const { selected, targets = [], lastMove = [], thinking = false } = opts;
+    const { selected, targets = [], choices = [], lastMove = [], thinking = false } = opts;
     root.dataset.thinking = thinking ? 'true' : 'false';
     hl.textContent = '';
     pieces.textContent = '';
@@ -145,6 +145,10 @@ export function createBoardView(root, handlers) {
     for (const t of targets) {
       el('rect', { x: left(t.x) + 1, y: top(t.y) + 1, width: C - 2, height: C - 2, class: 'target-ring' }, hl);
       el('circle', { cx: cx(t.x), cy: cy(t.y), r: 9, class: 'target' }, hl);
+    }
+
+    for (const q of choices) {
+      el('circle', { cx: cx(q.x), cy: cy(q.y), r: 20, class: 'choice-ring' }, hl);
     }
 
     // Goal-keeper arms: two horizontal stubs, only while inside his own large area.
